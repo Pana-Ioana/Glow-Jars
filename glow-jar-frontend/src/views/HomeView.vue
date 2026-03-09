@@ -210,7 +210,7 @@
             </v-col>
 
             <v-col cols="12" md="4" class="d-flex justify-md-end mt-6 mt-md-0">
-              <v-btn color="accent" rounded="xl" size="large" class="btn-soft">
+              <v-btn color="accent" rounded="xl" size="large" class="btn-soft" @click="router.push('/drops')">
                 Vezi drop
               </v-btn>
             </v-col>

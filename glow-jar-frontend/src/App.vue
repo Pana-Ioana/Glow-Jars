@@ -23,9 +23,9 @@
           <v-btn variant="text" @click="router.push('/collection')">
             Colecție
           </v-btn>
-          <v-btn variant="text">
+          <v-btn variant="text" @click="router.push('/drops')">
             Drops
-          </v-btn>
+          </v-btn>    
           <v-btn variant="text">
             Cum funcționează
           </v-btn>
