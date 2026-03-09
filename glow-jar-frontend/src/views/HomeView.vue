@@ -53,7 +53,7 @@
 
         <div
           v-intersect="reveal"
-          class="reveal d-flex align-center justify-space-between mt-16 mb-6"
+          class="reveal section-header mt-10 mb-6"
         >
           <div>
             <div class="brand-serif text-h5 section-heading">
@@ -64,7 +64,12 @@
             </div>
           </div>
 
-          <v-btn variant="outlined" rounded="xl" class="btn-soft" @click="router.push('/collection')">
+          <v-btn
+            variant="outlined"
+            rounded="xl"
+            class="btn-soft"
+            @click="router.push('/collection')"
+          >
             Vezi toate
           </v-btn>
         </div>
@@ -140,7 +145,11 @@
           </v-col>
         </v-row>
 
-        <div v-intersect="reveal" class="reveal section-title mt-16">
+        <div
+          id="how-it-works"
+          v-intersect="reveal"
+          class="reveal section-title mt-16"
+        >
           <span class="section-line"></span>
           <h2>Cum funcționează</h2>
           <span class="section-line"></span>
@@ -210,7 +219,13 @@
             </v-col>
 
             <v-col cols="12" md="4" class="d-flex justify-md-end mt-6 mt-md-0">
-              <v-btn color="accent" rounded="xl" size="large" class="btn-soft" @click="router.push('/drops')">
+              <v-btn
+                color="accent"
+                rounded="xl"
+                size="large"
+                class="btn-soft"
+                @click="router.push('/drops')"
+              >
                 Vezi drop
               </v-btn>
             </v-col>
@@ -226,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue"
+import { onMounted } from "vue"
 import { useRouter } from "vue-router"
 import AppFooter from "../components/AppFooter.vue"
 
@@ -279,35 +294,6 @@ const bestsellers = [
   },
 ]
 
-const collectionLinks = [
-  { key: "all", label: "Toate", path: "/collection" },
-  { key: "romantic", label: "Romantic & pastel", path: "/collection?category=romantic" },
-  { key: "minimal", label: "Minimal & clean", path: "/collection?category=minimal" },
-  { key: "elegant", label: "Elegant & clasic", path: "/collection?category=elegant" },
-  { key: "bold", label: "Bold & statement", path: "/collection?category=bold" },
-  { key: "dark", label: "Dark & mysterious", path: "/collection?category=dark" },
-  { key: "boho", label: "Boho & natural", path: "/collection?category=boho" },
-  { key: "glam", label: "Glam & festive", path: "/collection?category=glam" },
-  { key: "celestial", label: "Celestial & dreamy", path: "/collection?category=celestial" },
-  { key: "vintage", label: "Vintage inspired", path: "/collection?category=vintage" },
-]
-
-const isScrolled = ref(false)
-
-const onScroll = () => {
-  isScrolled.value = window.scrollY > 8
-}
-
-onMounted(() => {
-  onScroll()
-  window.addEventListener("scroll", onScroll, { passive: true })
-  setupStagger()
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener("scroll", onScroll)
-})
-
 const reveal = (isIntersecting: boolean, entries: IntersectionObserverEntry[]) => {
   const el = entries[0]?.target as HTMLElement | undefined
   if (!el) return
@@ -324,35 +310,20 @@ const setupStagger = () => {
   })
 }
 
-const goHome = () => {
-  window.location.href = "/"
-}
+onMounted(() => {
+  setupStagger()
+})
 </script>
 
 <style scoped>
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  transition: background-color .25s ease, box-shadow .25s ease, border-color .25s ease;
-}
-
-.topbar:not(.topbar--scrolled) {
-  background: transparent !important;
-  border-bottom: 1px solid transparent;
-}
-
-.topbar--scrolled {
-  background: rgba(255,255,255,0.75) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(90,59,59,0.12);
+#how-it-works {
+  scroll-margin-top: 100px;
 }
 
 .reveal {
   opacity: 0;
   transform: translateY(18px);
-  transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(.2,.8,.2,1);
   will-change: opacity, transform;
 }
 
@@ -365,7 +336,7 @@ const goHome = () => {
 .reveal-stagger .v-card {
   opacity: 0;
   transform: translateY(14px);
-  transition: opacity .55s ease, transform .55s cubic-bezier(.2,.8,.2,1);
+  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(.2,.8,.2,1);
 }
 
 .reveal-stagger.is-visible .boutique-card,
@@ -390,7 +361,7 @@ const goHome = () => {
 
 .hero-subtitle {
   max-width: 58ch;
-  opacity: .85;
+  opacity: 0.85;
 }
 
 .mood-media {
@@ -426,45 +397,8 @@ const goHome = () => {
   flex-grow: 1;
 }
 
-.logo-click {
-  cursor: pointer;
-  transition: transform .2s ease, opacity .2s ease;
-}
-
-.logo-click:hover {
-  transform: translateY(-1px);
-  opacity: .85;
-}
-
-.collection-menu {
-  min-width: 360px;
-  border-radius: 20px;
-  border: 1px solid rgba(90, 59, 59, 0.1);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 16px 45px rgba(60, 30, 30, 0.12);
-}
-
-.collection-menu-title {
-  color: rgba(90, 59, 59, 0.95);
-}
-
-.collection-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.collection-link {
-  justify-content: flex-start;
-  text-transform: none !important;
-  letter-spacing: 0 !important;
-  font-weight: 600 !important;
-  color: rgba(90, 59, 59, 0.82) !important;
-}
-
 .section-heading {
-  color: rgba(90,59,59,0.95);
+  color: rgba(90, 59, 59, 0.95);
 }
 
 .section-subtitle {
@@ -486,5 +420,12 @@ const goHome = () => {
 
 .category-card {
   min-height: 132px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
 }
 </style>
