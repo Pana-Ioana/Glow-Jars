@@ -1,0 +1,113 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@300;400;500;600&display=swap");
+
+:root {
+  --ink: rgba(90, 59, 59, 0.95);
+  --muted: rgba(90, 59, 59, 0.75);
+  --stroke: rgba(90, 59, 59, 0.10);
+  --shadow: rgba(60, 30, 30, 0.10);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* IMPORTANT: wallpaper FIX, nu mai depinde de Vuetify */
+#app {
+  min-height: 100vh;
+  position: relative;
+}
+
+#app::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(900px 500px at 20% 0%,
+      rgba(248, 232, 238, 0.95) 0%,
+      rgba(255, 248, 242, 0.85) 55%,
+      rgba(234, 220, 248, 0.55) 100%),
+    linear-gradient(180deg, #fff8f2 0%, #f7ecea 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Transparent peste tot ca sa NU acopere wallpaper-ul */
+.v-application,
+.v-application__wrap,
+.v-layout,
+.v-main,
+.v-main__wrap {
+  background: transparent !important;
+}
+
+/* Layout + typography */
+.brand-serif {
+  font-family: "Playfair Display", serif;
+  letter-spacing: -0.4px;
+}
+
+.v-container {
+  max-width: 1180px !important;
+}
+
+/* Boutique look */
+.boutique-card {
+  border: 1px solid var(--stroke);
+  box-shadow: 0 18px 55px var(--shadow);
+  border-radius: 22px !important;
+}
+
+.boutique-sheet {
+  border: 1px solid var(--stroke);
+  border-radius: 28px !important;
+  box-shadow: 0 20px 60px var(--shadow);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  margin: 18px 0 22px;
+}
+
+.section-title h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 34px;
+  margin: 0;
+  letter-spacing: -0.6px;
+  color: var(--ink);
+}
+
+.section-line {
+  height: 1px;
+  width: 140px;
+  background: rgba(90, 59, 59, 0.22);
+}
+
+.btn-soft {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 700 !important;
+}
+
+.hero-title {
+  color: var(--ink);
+}
+
+/* Optional: daca vezi scroll horizontal */
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
