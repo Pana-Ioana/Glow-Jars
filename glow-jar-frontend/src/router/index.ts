@@ -3,6 +3,7 @@ import HomeView from "../views/HomeView.vue"
 import CollectionView from "../views/CollectionView.vue"
 import DropsView from "../views/DropsView.vue"
 import LoginView from "../views/LoginView.vue"
+import CustomizeJarView from "../views/CustomizeJarView.vue"
 
 const router = createRouter({
   history: createWebHistory(),
@@ -23,10 +24,15 @@ const router = createRouter({
       component: DropsView,
     },
     {
-      path: '/login',
-      name: 'login',
+      path: "/login",
+      name: "login",
       component: LoginView,
-    }
+    },
+    {
+      path: "/customize",
+      name: "customize",
+      component: CustomizeJarView,
+    },
   ],
 })
 

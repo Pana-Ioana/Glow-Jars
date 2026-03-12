@@ -67,13 +67,10 @@
         </div>
 
         <div class="d-flex ga-2">
-          <v-btn
-  variant="text"
-  @click="$router.push('/login')"
->
-  Autentificare
-</v-btn>
-          <v-btn color="accent" rounded="xl" class="btn-soft">
+          <v-btn variant="text" class="btn-soft" @click="router.push('/login')">
+            Autentificare
+          </v-btn>
+          <v-btn color="accent" rounded="xl" class="btn-soft" @click="router.push('/customize')">
             Creează jar
           </v-btn>
         </div>
