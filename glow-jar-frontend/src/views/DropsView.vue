@@ -3,7 +3,6 @@
     <v-main>
       <v-container class="py-16">
 
-        <!-- TITLE -->
         <div class="mb-10">
           <div class="brand-serif text-h3 section-heading mb-2">
             Drops
@@ -13,7 +12,6 @@
           </div>
         </div>
 
-        <!-- CURRENT DROP -->
         <v-sheet
           class="boutique-sheet pa-10 mb-16 current-drop"
           color="surface"
