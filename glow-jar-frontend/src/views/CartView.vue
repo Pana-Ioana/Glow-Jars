@@ -1,157 +1,333 @@
 <template>
   <v-container class="py-10">
-    <div class="cart-shell">
-      <h1 class="cart-title mb-6">Coșul tău</h1>
+    <div class="checkout-shell">
+      <div class="page-header">
+        <p class="eyebrow">Glow Jar</p>
+        <h1 class="page-title">Checkout</h1>
+        <p class="page-subtitle">
+          Completează detaliile comenzii pentru a finaliza cumpărăturile.
+        </p>
+      </div>
 
-      <v-card v-if="!cartStore.items.length" class="pa-8 text-center" rounded="xl" elevation="0">
-        <p class="mb-4">Coșul este gol momentan.</p>
-        <v-btn class="gold-btn" to="/">Continuă shopping-ul</v-btn>
-      </v-card>
+      <div v-if="cartItems.length === 0">
+        <v-card class="empty-card pa-10" rounded="xl" elevation="0">
+          <div class="text-center">
+            <h2 class="empty-title mb-3">Nu ai produse în coș</h2>
+            <p class="empty-text mb-6">
+              Adaugă mai întâi ceva în coș ca să poți continua.
+            </p>
 
-      <div v-else class="cart-grid">
-        <v-card class="pa-6" rounded="xl" elevation="0">
-          <div
-            v-for="item in cartStore.items"
-            :key="item.id"
-            class="cart-item"
-          >
-            <div class="cart-main">
-              <h3>{{ item.name }}</h3>
-              <p class="item-type">{{ item.type === 'custom-jar' ? 'Jar personalizat' : 'Produs' }}</p>
-
-              <div v-if="item.customization" class="custom-details">
-                <p><strong>Stil:</strong> {{ item.customization.style || '—' }}</p>
-                <p><strong>Material:</strong> {{ item.customization.material || '—' }}</p>
-                <p><strong>Premium:</strong> {{ item.customization.premiumOnly ? 'Da' : 'Nu' }}</p>
-                <p><strong>Price range:</strong> {{ item.customization.priceRange || '—' }}</p>
-                <p><strong>Mărime:</strong> {{ item.customization.size || '—' }}</p>
-                <p><strong>Note:</strong> {{ item.customization.notes || '—' }}</p>
-              </div>
-            </div>
-
-            <div class="cart-side">
-              <p class="price">{{ item.price }} RON</p>
-
-              <div class="qty-row">
-                <v-btn size="x-small" icon="mdi-minus" @click="cartStore.updateQuantity(item.id, item.quantity - 1)" />
-                <span>{{ item.quantity }}</span>
-                <v-btn size="x-small" icon="mdi-plus" @click="cartStore.updateQuantity(item.id, item.quantity + 1)" />
-              </div>
-
-              <v-btn variant="text" color="error" @click="cartStore.removeItem(item.id)">
-                Șterge
-              </v-btn>
-            </div>
+            <v-btn class="gold-btn" @click="router.push('/collection')">
+              Înapoi la shopping
+            </v-btn>
           </div>
-        </v-card>
-
-        <v-card class="pa-6" rounded="xl" elevation="0">
-          <h2 class="mb-4">Sumar comandă</h2>
-          <div class="summary-line">
-            <span>Produse</span>
-            <strong>{{ cartStore.itemCount }}</strong>
-          </div>
-          <div class="summary-line">
-            <span>Subtotal</span>
-            <strong>{{ cartStore.subtotal }} RON</strong>
-          </div>
-
-          <v-btn class="gold-btn mt-6" block size="large">
-            Mergi la checkout
-          </v-btn>
         </v-card>
       </div>
+
+      <div v-else class="checkout-grid">
+        <v-card class="form-card pa-6" rounded="xl" elevation="0">
+          <h2 class="section-title mb-4">Date de livrare</h2>
+
+          <v-text-field
+            v-model="form.firstName"
+            label="Prenume"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-text-field
+            v-model="form.lastName"
+            label="Nume"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-text-field
+            v-model="form.email"
+            label="Email"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-text-field
+            v-model="form.phone"
+            label="Telefon"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-text-field
+            v-model="form.address"
+            label="Adresă"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-text-field
+            v-model="form.city"
+            label="Oraș"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-text-field
+            v-model="form.county"
+            label="Județ / sector"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-text-field
+            v-model="form.postalCode"
+            label="Cod poștal"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-select
+            v-model="form.paymentMethod"
+            label="Metodă de plată"
+            :items="paymentOptions"
+            variant="outlined"
+            class="mb-4"
+          />
+
+          <v-textarea
+            v-model="form.orderNotes"
+            label="Note pentru comandă"
+            variant="outlined"
+            rows="3"
+            auto-grow
+          />
+
+          <v-btn class="gold-btn mt-6" block size="large" @click="placeOrder">
+            Plasează comanda
+          </v-btn>
+        </v-card>
+
+        <v-card class="summary-card pa-6" rounded="xl" elevation="0">
+          <h2 class="section-title mb-4">Rezumat comandă</h2>
+
+          <div class="checkout-items">
+            <div
+              v-for="item in cartItems"
+              :key="item.id"
+              class="checkout-item"
+            >
+              <div>
+                <div class="checkout-item-title">{{ item.name }}</div>
+                <div class="checkout-item-subtitle">
+                  {{ item.quantity }} x {{ item.price }} RON
+                </div>
+
+                <div v-if="item.customization" class="checkout-item-custom">
+                  <div v-if="item.customization.style">
+                    Stil: {{ item.customization.style }}
+                  </div>
+                  <div v-if="item.customization.material">
+                    Material: {{ item.customization.material }}
+                  </div>
+                  <div v-if="item.customization.priceRange">
+                    Buget: {{ item.customization.priceRange }}
+                  </div>
+                </div>
+              </div>
+
+              <strong>{{ item.quantity * item.price }} RON</strong>
+            </div>
+          </div>
+
+          <v-divider class="my-4" />
+
+          <div class="summary-line">
+            <span>Subtotal</span>
+            <strong>{{ subtotal }} RON</strong>
+          </div>
+
+          <div class="summary-line">
+            <span>Livrare</span>
+            <strong>{{ shippingCost === 0 ? 'Gratuită' : `${shippingCost} RON` }}</strong>
+          </div>
+
+          <div class="summary-line total-line">
+            <span>Total</span>
+            <strong>{{ total }} RON</strong>
+          </div>
+        </v-card>
+      </div>
+
+      <v-snackbar v-model="snackbar" timeout="2500">
+        Comanda a fost plasată cu succes.
+      </v-snackbar>
     </div>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { useCartStore } from '@/stores/cart'
+import { computed, reactive, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
-const cartStore = useCartStore()
+const router = useRouter()
+const snackbar = ref(false)
+const cartItems = ref<any[]>([])
+
+const paymentOptions = ['Card online', 'Ramburs la livrare', 'Transfer bancar']
+
+const form = reactive({
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  address: '',
+  city: '',
+  county: '',
+  postalCode: '',
+  paymentMethod: '',
+  orderNotes: ''
+})
+
+function loadCart() {
+  try {
+    cartItems.value = JSON.parse(localStorage.getItem('glowJarCart') || '[]')
+  } catch {
+    cartItems.value = []
+  }
+}
+
+const subtotal = computed(() =>
+  cartItems.value.reduce((total, item) => total + item.price * item.quantity, 0)
+)
+
+const shippingCost = computed(() => {
+  if (subtotal.value >= 250) return 0
+  if (subtotal.value === 0) return 0
+  return 18
+})
+
+const total = computed(() => subtotal.value + shippingCost.value)
+
+function placeOrder() {
+  localStorage.removeItem('glowJarCart')
+  snackbar.value = true
+
+  setTimeout(() => {
+    router.push('/')
+  }, 1200)
+}
+
+onMounted(() => {
+  loadCart()
+})
 </script>
 
 <style scoped>
-.cart-shell {
+.checkout-shell {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.cart-title {
-  font-size: 40px;
+.page-header {
+  margin-bottom: 32px;
 }
 
-.cart-grid {
+.eyebrow {
+  font-size: 14px;
+  color: #866d5c;
+  margin-bottom: 8px;
+}
+
+.page-title {
+  font-size: 42px;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  color: #2f2428;
+}
+
+.page-subtitle {
+  font-size: 18px;
+  color: #64575e;
+}
+
+.checkout-grid {
   display: grid;
-  grid-template-columns: 1.3fr 0.8fr;
+  grid-template-columns: 1.2fr 0.8fr;
   gap: 24px;
 }
 
-.cart-item {
+.form-card,
+.summary-card,
+.empty-card {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 30px rgba(120, 90, 110, 0.06);
+}
+
+.section-title {
+  font-size: 24px;
+  color: #2f2428;
+}
+
+.checkout-items {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.checkout-item {
   display: flex;
   justify-content: space-between;
-  gap: 18px;
-  padding: 18px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.item-type {
-  color: #836f78;
-  margin-bottom: 12px;
-}
-
-.custom-details p {
-  margin-bottom: 6px;
-  color: #54484d;
-}
-
-.cart-side {
-  min-width: 120px;
-  text-align: right;
-}
-
-.price {
+.checkout-item-title {
   font-weight: 700;
-  margin-bottom: 12px;
+  color: #2f2428;
 }
 
-.qty-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-bottom: 8px;
+.checkout-item-subtitle,
+.checkout-item-custom {
+  font-size: 13px;
+  color: #6d5f66;
+  margin-top: 4px;
 }
 
 .summary-line {
   display: flex;
   justify-content: space-between;
   margin-bottom: 14px;
+  color: #43363c;
+}
+
+.total-line {
+  font-size: 18px;
+}
+
+.empty-title {
+  color: #2f2428;
+}
+
+.empty-text {
+  color: #64575e;
 }
 
 .gold-btn {
-  background: #d5ae58;
-  color: white;
+  background: #d5ae58 !important;
+  color: white !important;
   border-radius: 999px;
   text-transform: none;
   font-weight: 600;
+  box-shadow: none;
 }
 
 @media (max-width: 960px) {
-  .cart-grid {
+  .checkout-grid {
     grid-template-columns: 1fr;
   }
 
-  .cart-item {
-    flex-direction: column;
-  }
-
-  .cart-side {
-    text-align: left;
-  }
-
-  .qty-row {
-    justify-content: flex-start;
+  .page-title {
+    font-size: 32px;
   }
 }
 </style>

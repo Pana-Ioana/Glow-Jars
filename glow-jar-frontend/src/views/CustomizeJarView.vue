@@ -2,13 +2,11 @@
   <v-container class="py-10">
     <div class="page-shell">
       <div class="page-header">
-        <div>
-          <p class="eyebrow">Glow Jar personalizat</p>
-          <h1 class="page-title">Creează un jar exact pe gustul tău</h1>
-          <p class="page-subtitle">
-            Spune-ne vibe-ul dorit, materialele preferate, nivelul de premium și bugetul.
-          </p>
-        </div>
+        <p class="eyebrow">Glow Jar personalizat</p>
+        <h1 class="page-title">Creează un jar exact pe gustul tău</h1>
+        <p class="page-subtitle">
+          Spune-ne vibe-ul dorit, materialele preferate, nivelul de premium și bugetul.
+        </p>
       </div>
 
       <div class="config-grid">
@@ -105,7 +103,12 @@
             <strong>{{ estimatedPrice }} RON</strong>
           </div>
 
-          <v-btn class="gold-btn mt-6" block size="large" @click="addCustomJarToCart">
+          <v-btn
+            class="gold-btn mt-6"
+            block
+            size="large"
+            @click="addCustomJarToCart"
+          >
             Adaugă în coș
           </v-btn>
         </v-card>
@@ -162,7 +165,6 @@ function addCustomJarToCart() {
   })
 
   localStorage.setItem('glowJarCart', JSON.stringify(existingCart))
-  router.push('/cart')
 }
 </script>
 
