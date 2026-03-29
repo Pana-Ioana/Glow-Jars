@@ -204,7 +204,7 @@ const handleRegister = async () => {
   isSubmitting.value = true
 
   try {
-    const response = await fetch('https://glow-jars.vercel.app/register', {
+    const response = await fetch('https://glow-jars-production.up.railway.app/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

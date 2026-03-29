@@ -130,7 +130,7 @@ const handleLogin = async () => {
   isSubmitting.value = true
 
   try {
-    const response = await fetch('https://glow-jars.vercel.app/login', {
+    const response = await fetch('https://glow-jars-production.up.railway.app/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
