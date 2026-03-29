@@ -1,4 +1,4 @@
-package com.glowjar.backend.demo;
+package com.glowjar.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
