@@ -204,7 +204,7 @@ const handleRegister = async () => {
   isSubmitting.value = true
 
   try {
-    const response = await fetch('https://glow-jars-production.up.railway.app/register', {
+    const response = await fetch('https://glow-jars-production.up.railway.app/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
