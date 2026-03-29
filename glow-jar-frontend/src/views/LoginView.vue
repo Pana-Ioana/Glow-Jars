@@ -103,7 +103,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const emailRules = [
   v => !!v || 'Emailul este obligatoriu.',
-  v => emailPattern.test(v) || 'Introdu un email valid.',
+  v => emailPattern.test(v) || 'Introdu un email valid.', 
 ]
 
 const passwordRules = [
@@ -130,7 +130,7 @@ const handleLogin = async () => {
   isSubmitting.value = true
 
   try {
-    const response = await fetch('http://localhost:8080/api/auth/login', {
+    const response = await fetch('https://glow-jars-production.up.railway.app/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
