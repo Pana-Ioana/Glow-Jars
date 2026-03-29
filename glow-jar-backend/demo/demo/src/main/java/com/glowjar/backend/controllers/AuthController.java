@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://glow-jars.vercel.app"
+})
 public class AuthController {
     private final AuthService authService;
 
