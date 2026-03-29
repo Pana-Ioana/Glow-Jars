@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+application-dev.properties
+application-prod.properties
+application.properties
+src/main/resources/application.properties
+glow-jar-backend/demo/demo/src/main/resources/application.properties
+glow-jar-backend/demo/demo/src/main/resources/application-*.properties

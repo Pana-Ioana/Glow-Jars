@@ -5,6 +5,7 @@ import DropsView from "../views/DropsView.vue"
 import LoginView from "../views/LoginView.vue"
 import CustomizeJarView from "../views/CustomizeJarView.vue"
 import CartView from "../views/CartView.vue"
+import RegisterView from '../views/RegisterView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -38,7 +39,12 @@ const router = createRouter({
       path:"/cart",
       name: "cart",
       component: CartView,
-    }
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView,
+    },
   ],
 })
 

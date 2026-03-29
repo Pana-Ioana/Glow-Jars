@@ -1,9 +1,7 @@
 <template>
   <v-container fluid class="login-page pa-0">
     <div class="login-wrapper">
-
       <div class="login-card">
-
         <div class="login-left">
           <div class="eyebrow">Contul tău Glow Jar</div>
 
@@ -23,79 +21,168 @@
         </div>
 
         <div class="login-right">
-
-          <v-text-field
-            v-model="email"
-            label="Email"
-            variant="outlined"
-            prepend-inner-icon="mdi-email-outline"
-            class="soft-field"
-            hide-details
-          />
-
-          <v-text-field
-            v-model="password"
-            label="Parolă"
-            :type="showPassword ? 'text' : 'password'"
-            variant="outlined"
-            prepend-inner-icon="mdi-lock-outline"
-            :append-inner-icon="showPassword ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
-            @click:append-inner="showPassword = !showPassword"
-            class="soft-field mt-4"
-            hide-details
-          />
-
-          <div class="login-actions">
-
-            <v-btn class="gold-btn" @click="login">
-              Autentificare
-            </v-btn>
-
-            <v-btn
+          <v-form ref="formRef" @submit.prevent="handleLogin">
+            <v-text-field
+              v-model.trim="form.email"
+              label="Email"
+              type="email"
               variant="outlined"
-              class="outline-btn"
-              @click="$router.push('/')"
-            >
-              Înapoi la magazin
-            </v-btn>
+              prepend-inner-icon="mdi-email-outline"
+              class="soft-field"
+              :rules="emailRules"
+            />
 
-          </div>
+            <v-text-field
+              v-model="form.password"
+              label="Parolă"
+              :type="showPassword ? 'text' : 'password'"
+              variant="outlined"
+              prepend-inner-icon="mdi-lock-outline"
+              :append-inner-icon="showPassword ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
+              @click:append-inner="showPassword = !showPassword"
+              class="soft-field mt-4"
+              :rules="passwordRules"
+            />
 
+            <p v-if="submitError" class="submit-error">
+              {{ submitError }}
+            </p>
+
+            <p v-if="submitSuccess" class="submit-success">
+              {{ submitSuccess }}
+            </p>
+
+            <div class="login-actions">
+              <v-btn
+                class="gold-btn"
+                type="submit"
+                :loading="isSubmitting"
+                :disabled="isSubmitting"
+              >
+                Autentificare
+              </v-btn>
+
+              <v-btn
+                variant="outlined"
+                class="outline-btn"
+                @click="$router.push('/')"
+              >
+                Înapoi la magazin
+              </v-btn>
+            </div>
+
+            <p class="switch-auth">
+              Nu ai cont?
+              <span @click="$router.push('/register')">Creează unul</span>
+            </p>
+          </v-form>
         </div>
-
       </div>
-
     </div>
   </v-container>
 </template>
 
-<script>
-export default {
-  name: "LoginView",
+<script setup>
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-  data() {
-    return {
-      email: "",
-      password: "",
-      showPassword: false
-    }
-  },
+const router = useRouter()
 
-  methods: {
-    login() {
-      console.log(this.email, this.password)
+const formRef = ref(null)
+const isSubmitting = ref(false)
+const submitError = ref('')
+const submitSuccess = ref('')
+const showPassword = ref(false)
+
+const form = reactive({
+  email: '',
+  password: '',
+})
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const emailRules = [
+  v => !!v || 'Emailul este obligatoriu.',
+  v => emailPattern.test(v) || 'Introdu un email valid.',
+]
+
+const passwordRules = [
+  v => !!v || 'Parola este obligatorie.',
+]
+
+const resetForm = () => {
+  form.email = ''
+  form.password = ''
+  formRef.value?.resetValidation?.()
+}
+
+const handleLogin = async () => {
+  submitError.value = ''
+  submitSuccess.value = ''
+
+  const result = await formRef.value?.validate()
+
+  if (!result?.valid) {
+    submitError.value = 'Te rog să completezi corect câmpurile.'
+    return
+  }
+
+  isSubmitting.value = true
+
+  try {
+    const response = await fetch('http://localhost:8080/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password,
+      }),
+    })
+
+    const rawText = await response.text()
+    let data = null
+
+    try {
+      data = rawText ? JSON.parse(rawText) : null
+    } catch {
+      data = rawText
     }
+
+    if (!response.ok) {
+      if (typeof data === 'string' && data.trim()) {
+        throw new Error(data)
+      }
+
+      if (data?.message) {
+        throw new Error(data.message)
+      }
+
+      throw new Error('Autentificarea a eșuat.')
+    }
+
+    localStorage.setItem('glowJarUser', JSON.stringify(data))
+    submitSuccess.value = 'Te-ai autentificat cu succes.'
+
+    resetForm()
+
+    setTimeout(() => {
+      router.push('/')
+    }, 900)
+  } catch (error) {
+    submitError.value = error?.message || 'A apărut o eroare la autentificare.'
+  } finally {
+    isSubmitting.value = false
   }
 }
 </script>
 
 <style scoped>
-
 .login-page{
   min-height: calc(100vh - 72px);
 }
 
-/* centrare reala */
 .login-wrapper{
   min-height: calc(100vh - 72px);
   display:flex;
@@ -107,16 +194,10 @@ export default {
 .login-card{
   width:100%;
   max-width:1050px;
-
   background:rgba(255,255,255,0.75);
-
   border-radius:30px;
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.06);
-
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
   padding:50px;
-
   display:grid;
   grid-template-columns:1fr 380px;
   gap:50px;
@@ -164,8 +245,8 @@ export default {
 }
 
 .gold-btn{
-  background:#d5ae58;
-  color:white;
+  background:#d5ae58 !important;
+  color:white !important;
   border-radius:999px;
   text-transform:none;
   height:44px;
@@ -178,18 +259,41 @@ export default {
   height:44px;
 }
 
+.switch-auth {
+  margin-top: 14px;
+  font-size: 0.95rem;
+  color: #6d6369;
+}
+
+.switch-auth span {
+  color: #b8872e;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit-error {
+  margin-top: 10px;
+  margin-bottom: 0;
+  font-size: 0.92rem;
+  color: #b23b3b;
+}
+
+.submit-success {
+  margin-top: 10px;
+  margin-bottom: 0;
+  font-size: 0.92rem;
+  color: #2e7d32;
+}
+
 @media (max-width:900px){
+  .login-card{
+    grid-template-columns:1fr;
+    padding:32px;
+    gap:30px;
+  }
 
-.login-card{
-grid-template-columns:1fr;
-padding:32px;
-gap:30px;
+  .login-title{
+    font-size:34px;
+  }
 }
-
-.login-title{
-font-size:34px;
-}
-
-}
-
 </style>
