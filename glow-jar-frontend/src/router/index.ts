@@ -6,6 +6,8 @@ import LoginView from "../views/LoginView.vue"
 import CustomizeJarView from "../views/CustomizeJarView.vue"
 import CartView from "../views/CartView.vue"
 import RegisterView from '../views/RegisterView.vue'
+import ProductsView from '../views/ProductsView.vue'
+import ProductView from '../views/ProductView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -45,6 +47,8 @@ const router = createRouter({
       name: 'register',
       component: RegisterView,
     },
+    { path: '/products', name: 'products', component: ProductsView },
+    { path: '/products/:slug', name: 'product', component: ProductView },
   ],
 })
 

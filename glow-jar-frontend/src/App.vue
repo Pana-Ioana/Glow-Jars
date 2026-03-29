@@ -67,6 +67,37 @@
         </div>
 
         <div class="d-flex align-center ga-2">
+          <div class="search-wrap d-none d-md-block">
+            <v-text-field
+              v-model="searchQuery"
+              density="compact"
+              variant="solo-filled"
+              hide-details
+              flat
+              rounded="xl"
+              bg-color="white"
+              placeholder="Caută jar..."
+              class="topbar-search"
+              @keyup.enter="submitSearch"
+            >
+              <template #prepend-inner>
+                <v-icon size="18">mdi-magnify</v-icon>
+              </template>
+
+              <template #append-inner>
+                <v-btn
+                  icon
+                  variant="text"
+                  size="x-small"
+                  class="search-icon-btn"
+                  @click="submitSearch"
+                >
+                  <v-icon size="18">mdi-arrow-right</v-icon>
+                </v-btn>
+              </template>
+            </v-text-field>
+          </div>
+
           <template v-if="currentUser">
             <v-menu
               v-model="userMenu"
@@ -250,6 +281,7 @@ const cartMenu = ref(false)
 const userMenu = ref(false)
 const cartItems = ref<any[]>([])
 const currentUser = ref<any | null>(null)
+const searchQuery = ref('')
 
 const collectionLinks = [
   { key: 'all', label: 'Toate', path: '/collection' },
@@ -351,6 +383,34 @@ function goToCart() {
   router.push('/cart')
 }
 
+async function submitSearch() {
+  const trimmed = searchQuery.value.trim()
+
+  if (!trimmed) {
+    await router.push('/products')
+    return
+  }
+
+  await router.push({
+    path: '/products',
+    query: {
+      ...route.query,
+      search: trimmed
+    }
+  })
+}
+
+function syncSearchFromRoute() {
+  if (typeof route.query.search === 'string') {
+    searchQuery.value = route.query.search
+    return
+  }
+
+  if (route.path !== '/products') {
+    searchQuery.value = ''
+  }
+}
+
 function handleStorageChange() {
   loadCurrentUser()
   loadCart()
@@ -362,12 +422,25 @@ watch(
     loadCart()
     loadCurrentUser()
 
-    if (newPath !== '/') return
+    if (newPath !== '/') {
+      syncSearchFromRoute()
+      return
+    }
 
     const pending = sessionStorage.getItem('pendingScrollTarget')
-    if (pending !== 'how-it-works') return
+    if (pending === 'how-it-works') {
+      startHowScrollRetry()
+    }
 
-    startHowScrollRetry()
+    syncSearchFromRoute()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => route.query.search,
+  () => {
+    syncSearchFromRoute()
   },
   { immediate: true }
 )
@@ -379,6 +452,7 @@ watch(cartMenu, (isOpen) => {
 onMounted(() => {
   loadCart()
   loadCurrentUser()
+  syncSearchFromRoute()
   window.addEventListener('storage', handleStorageChange)
 })
 
@@ -434,6 +508,35 @@ onBeforeUnmount(() => {
 
 .cart-btn {
   color: rgba(90, 59, 59, 0.9) !important;
+}
+
+.search-wrap {
+  width: 250px;
+  margin-right: 4px;
+}
+
+.topbar-search :deep(.v-field) {
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(90, 59, 59, 0.1);
+}
+
+.topbar-search :deep(.v-field__input) {
+  min-height: 40px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  font-size: 14px;
+}
+
+.topbar-search :deep(.v-field__prepend-inner),
+.topbar-search :deep(.v-field__append-inner) {
+  align-items: center;
+  color: rgba(90, 59, 59, 0.7);
+}
+
+.search-icon-btn {
+  margin-right: -4px;
 }
 
 .user-chip {
@@ -591,6 +694,10 @@ onBeforeUnmount(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .search-wrap {
+    display: none;
   }
 }
 </style>
