@@ -182,10 +182,6 @@ const handleRegister = async () => {
   } finally {
     isSubmitting.value = false
   }
-
-  const loginWithGoogle = () => {
-  window.location.href = 'https://glow-jars-production.up.railway.app/oauth2/authorization/google'
-}
 }
 </script>
 
