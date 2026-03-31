@@ -15,7 +15,7 @@ public class ProductOption {
     private Double price;
     private Boolean available = true;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
 

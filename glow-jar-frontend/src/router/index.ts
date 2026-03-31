@@ -8,6 +8,12 @@ import CartView from "../views/CartView.vue"
 import RegisterView from '../views/RegisterView.vue'
 import ProductsView from '../views/ProductsView.vue'
 import ProductView from '../views/ProductView.vue'
+import BankTransferView from '../views/BankTransferView.vue'
+import CardPaymentView from '../views/CardPaymentView.vue'
+import VerifyEmailView from '../views/VerifyEmailView.vue'
+import ForgotPasswordView from '../views/ForgotPasswordView.vue'
+import ResetPasswordView from '../views/ResetPasswordView.vue'
+import OrdersView from "../views/OrdersView.vue"
 
 const router = createRouter({
   history: createWebHistory(),
@@ -49,6 +55,20 @@ const router = createRouter({
     },
     { path: '/products', name: 'products', component: ProductsView },
     { path: '/products/:slug', name: 'product', component: ProductView },
+    {
+      path: '/bank-transfer',
+      name: 'bank-transfer',
+        component: BankTransferView
+    },
+    {
+  path: '/card-payment',
+  name: 'card-payment',
+  component: CardPaymentView
+},
+  { path: '/verify-email', name: 'verify-email', component: VerifyEmailView },
+  { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView },
+  { path: '/reset-password', name: 'reset-password', component: ResetPasswordView },
+  {path: '/orders', name: 'orders', component: OrdersView},
   ],
 })
 

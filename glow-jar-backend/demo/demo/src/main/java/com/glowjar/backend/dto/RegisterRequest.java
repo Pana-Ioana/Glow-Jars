@@ -1,21 +1,27 @@
 package com.glowjar.backend.dto;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
 public class RegisterRequest {
-    @NotBlank
+    @NotBlank(message = "Prenumele este obligatoriu.")
+    @Size(min = 2, message = "Prenumele trebuie sa aiba minim 2 caractere.")
     private String firstName;
 
-    @NotBlank
+    @NotBlank(message = "Numele este obligatoriu.")
+    @Size(min = 2, message = "Numele trebuie sa aiba minim 2 caractere.")
     private String lastName;
 
-    @Email
-    @NotBlank
+    @NotBlank(message = "Emailul este obligatoriu.")
+    @Email(message = "Email invalid.")
     private String email;
 
-    @NotBlank
-    @Size(min = 8)
+    @NotBlank(message = "Parola este obligatorie.")
+    @Size(min = 8, message = "Parola trebuie sa aiba minim 8 caractere.")
     private String password;
+
+    public RegisterRequest() {}
 
     public String getFirstName() {
         return firstName;

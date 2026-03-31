@@ -4,15 +4,15 @@
       <v-card class="auth-card" elevation="0">
         <div class="auth-grid">
           <div class="auth-left">
-            <p class="eyebrow">Bine ai revenit</p>
-            <h1 class="title">Intră în cont</h1>
+            <p class="eyebrow">Parolă nouă</p>
+            <h1 class="title">Resetează parola</h1>
             <p class="subtitle">
-              Accesează comenzile, wishlist-ul și preferințele tale Glow Jar.
+              Introdu emailul, codul primit și noua parolă pentru a-ți recăpăta accesul.
             </p>
           </div>
 
           <div class="auth-right">
-            <v-form ref="formRef" @submit.prevent="handleLogin">
+            <v-form ref="formRef" @submit.prevent="handleResetPassword">
               <v-text-field
                 v-model.trim="form.email"
                 label="Email"
@@ -24,15 +24,37 @@
               />
 
               <v-text-field
-                v-model="form.password"
+                v-model.trim="form.code"
+                label="Cod de resetare"
+                variant="outlined"
+                density="comfortable"
+                class="field"
+                :rules="codeRules"
+                maxlength="6"
+              />
+
+              <v-text-field
+                v-model="form.newPassword"
                 :type="showPassword ? 'text' : 'password'"
-                label="Parolă"
+                label="Parolă nouă"
                 variant="outlined"
                 density="comfortable"
                 class="field"
                 :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
                 :rules="passwordRules"
                 @click:append-inner="showPassword = !showPassword"
+              />
+
+              <v-text-field
+                v-model="form.confirmPassword"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                label="Confirmă parola nouă"
+                variant="outlined"
+                density="comfortable"
+                class="field"
+                :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                :rules="confirmPasswordRules"
+                @click:append-inner="showConfirmPassword = !showConfirmPassword"
               />
 
               <p v-if="submitError" class="submit-error">{{ submitError }}</p>
@@ -46,24 +68,8 @@
                   elevation="0"
                   :loading="isSubmitting"
                 >
-                  Login
+                  Salvează parola nouă
                 </v-btn>
-
-                <v-btn
-                  variant="outlined"
-                  class="secondary-btn"
-                  rounded="pill"
-                  elevation="0"
-                  @click="goToRegister"
-                >
-                  Creează cont
-                </v-btn>
-              </div>
-
-              <div class="text-link-row">
-                <button type="button" class="text-link" @click="goToForgotPassword">
-                  Ai uitat parola?
-                </button>
               </div>
             </v-form>
           </div>
@@ -74,9 +80,10 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
+const route = useRoute()
 const router = useRouter()
 
 const formRef = ref(null)
@@ -84,10 +91,13 @@ const isSubmitting = ref(false)
 const submitError = ref('')
 const submitSuccess = ref('')
 const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 const form = reactive({
-  email: '',
-  password: '',
+  email: route.query.email || '',
+  code: '',
+  newPassword: '',
+  confirmPassword: '',
 })
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -97,54 +107,62 @@ const emailRules = [
   v => emailPattern.test(v) || 'Introdu un email valid.',
 ]
 
-const passwordRules = [
-  v => !!v || 'Parola este obligatorie.',
+const codeRules = [
+  v => !!v || 'Codul este obligatoriu.',
+  v => /^\d{6}$/.test(v) || 'Codul trebuie să aibă 6 cifre.',
 ]
 
-const handleLogin = async () => {
+const passwordRules = [
+  v => !!v || 'Parola nouă este obligatorie.',
+  v => (v && v.length >= 8) || 'Parola trebuie să aibă minim 8 caractere.',
+  v => /[A-Z]/.test(v) || 'Parola trebuie să conțină cel puțin o literă mare.',
+  v => /[0-9]/.test(v) || 'Parola trebuie să conțină cel puțin o cifră.',
+]
+
+const confirmPasswordRules = computed(() => [
+  v => !!v || 'Confirmarea parolei este obligatorie.',
+  v => v === form.newPassword || 'Parolele nu se potrivesc.',
+])
+
+const handleResetPassword = async () => {
   submitError.value = ''
   submitSuccess.value = ''
 
   const result = await formRef.value?.validate()
   if (!result?.valid) {
-    submitError.value = 'Completează corect emailul și parola.'
+    submitError.value = 'Te rog să completezi corect toate câmpurile.'
     return
   }
 
   isSubmitting.value = true
 
   try {
-    const response = await fetch('http://localhost:8080/api/auth/login', {
+    const response = await fetch('http://localhost:8080/api/auth/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        email: form.email,
+        code: form.code,
+        newPassword: form.newPassword,
+      }),
     })
 
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data?.message || 'Nu s-a putut face logarea.')
+      throw new Error(data?.message || 'Nu s-a putut reseta parola.')
     }
 
-    localStorage.setItem('glowJarUser', JSON.stringify(data))
-    submitSuccess.value = 'Te loghez...'
+    submitSuccess.value = data?.message || 'Parola a fost schimbată cu succes.'
 
     setTimeout(() => {
-      router.push('/')
-    }, 900)
+      router.push('/login')
+    }, 1000)
   } catch (error) {
     submitError.value = error?.message || 'A apărut o eroare.'
   } finally {
     isSubmitting.value = false
   }
-}
-
-const goToRegister = () => {
-  router.push('/register')
-}
-
-const goToForgotPassword = () => {
-  router.push('/forgot-password')
 }
 </script>
 
@@ -243,28 +261,6 @@ const goToForgotPassword = () => {
   padding-inline: 24px;
 }
 
-.secondary-btn {
-  border-color: rgba(55, 44, 50, 0.35) !important;
-  color: #3d3439 !important;
-  text-transform: none;
-  font-weight: 500;
-  min-height: 46px;
-  padding-inline: 22px;
-}
-
-.text-link-row {
-  margin-top: 16px;
-}
-
-.text-link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: #6a6268;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
 @media (max-width: 960px) {
   .auth-card {
     max-width: 760px;
@@ -296,8 +292,7 @@ const goToForgotPassword = () => {
     flex-direction: column;
   }
 
-  .primary-btn,
-  .secondary-btn {
+  .primary-btn {
     width: 100%;
   }
 }

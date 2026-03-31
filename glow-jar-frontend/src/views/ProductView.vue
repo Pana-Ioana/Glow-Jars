@@ -238,7 +238,7 @@ async function fetchProduct() {
 
   try {
     const slug = route.params.slug
-    const res = await fetch(`http://localhost:8080/api/products/${slug}`)
+    const res = await fetch(`https://glow-jars-production.up.railway.app/api/products/${slug}`)
 
     if (!res.ok) {
       throw new Error(`Nu s-a putut încărca produsul. (${res.status})`)

@@ -1,9 +1,12 @@
 package com.glowjar.backend.dto;
+
 public class AuthResponse {
     private Long id;
     private String firstName;
     private String lastName;
     private String email;
+
+    public AuthResponse() {}
 
     public AuthResponse(Long id, String firstName, String lastName, String email) {
         this.id = id;

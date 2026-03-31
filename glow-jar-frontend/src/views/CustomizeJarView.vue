@@ -5,7 +5,7 @@
         <p class="eyebrow">Glow Jar personalizat</p>
         <h1 class="page-title">Creează un jar exact pe gustul tău</h1>
         <p class="page-subtitle">
-          Spune-ne vibe-ul dorit, materialele preferate, nivelul de premium și bugetul.
+          Alege vibe-ul, materialele și pachetul dorit.
         </p>
       </div>
 
@@ -13,61 +13,77 @@
         <v-card class="config-card pa-6" rounded="xl" elevation="0">
           <h2 class="section-title mb-4">Preferințele tale</h2>
 
-          <v-text-field
-            v-model="form.style"
-            label="Cum ai vrea să arate jar-ul?"
-            placeholder="ex. coquette, old money, dark romantic, clean girl, celestial..."
-            variant="outlined"
-            class="mb-4"
-          />
+          <v-form ref="formRef" @submit.prevent="addCustomJarToCart">
+            <v-text-field
+              v-model="form.style"
+              label="Stil / vibe"
+              placeholder="coquette, clean girl, dark romance..."
+              variant="outlined"
+              class="mb-4"
+              :rules="[requiredRule('Stilul')]"
+            />
 
-          <v-select
-            v-model="form.material"
-            label="Material principal"
-            :items="materials"
-            variant="outlined"
-            class="mb-4"
-          />
+            <v-select
+              v-model="form.material"
+              label="Material"
+              :items="materials"
+              variant="outlined"
+              class="mb-4"
+              :rules="[requiredRule('Materialul')]"
+            />
 
-          <v-switch
-            v-model="form.premiumOnly"
-            label="Vreau doar premium jewelry / high-end pieces"
-            color="warning"
-            inset
-            class="mb-2"
-          />
+            <v-select
+              v-model="form.package"
+              label="Pachet"
+              :items="packages"
+              item-title="label"
+              item-value="value"
+              variant="outlined"
+              class="mb-4"
+              :rules="[requiredRule('Pachetul')]"
+            />
 
-          <v-select
-            v-model="form.priceRange"
-            label="Price range"
-            :items="priceRanges"
-            variant="outlined"
-            class="mb-4"
-          />
+            <v-switch
+              v-model="form.premiumOnly"
+              label="Premium jewelry only (+500 RON)"
+              color="warning"
+              inset
+              class="mb-4"
+            />
 
-          <v-select
-            v-model="form.size"
-            label="Mărime / fit"
-            :items="sizes"
-            variant="outlined"
-            class="mb-4"
-          />
+            <v-select
+              v-model="form.size"
+              label="Mărime inele"
+              :items="sizes"
+              variant="outlined"
+              class="mb-4"
+              :rules="[requiredRule('Mărimea')]"
+            />
 
-          <v-textarea
-            v-model="form.notes"
-            label="Ce ai vrea să conțină / ce să evităm"
-            placeholder="ex. prefer cercei mici, fără perle, mai mult gold decât silver, fără piese foarte chunky..."
-            variant="outlined"
-            rows="4"
-            auto-grow
-          />
+            <v-textarea
+              v-model="form.notes"
+              label="Note"
+              variant="outlined"
+              rows="3"
+              auto-grow
+              :rules="[maxLengthRule(300)]"
+            />
+
+            <div v-if="error" class="form-error mt-4">
+              {{ error }}
+            </div>
+
+            <v-btn class="gold-btn mt-6" block type="submit">
+              Adaugă în coș
+            </v-btn>
+          </v-form>
         </v-card>
 
         <v-card class="summary-card pa-6" rounded="xl" elevation="0">
-          <h2 class="section-title mb-4">Rezumatul jar-ului</h2>
+          <h2 class="section-title mb-4">Rezumat</h2>
 
           <div class="summary-row">
-            <span>Stil / vibe</span>
+            <span>Stil</span>
             <strong>{{ form.style || '—' }}</strong>
           </div>
 
@@ -77,94 +93,134 @@
           </div>
 
           <div class="summary-row">
-            <span>Premium only</span>
-            <strong>{{ form.premiumOnly ? 'Da' : 'Nu' }}</strong>
+            <span>Pachet</span>
+            <strong>{{ selectedPackageLabel }}</strong>
           </div>
 
           <div class="summary-row">
-            <span>Price range</span>
-            <strong>{{ form.priceRange || '—' }}</strong>
+            <span>Premium</span>
+            <strong>{{ form.premiumOnly ? '+500 RON' : 'Nu' }}</strong>
           </div>
 
           <div class="summary-row">
-            <span>Mărime</span>
+            <span>Mărime inele</span>
             <strong>{{ form.size || '—' }}</strong>
           </div>
 
-          <div class="summary-notes">
-            <span>Note client</span>
+          <div class="summary-notes mt-4">
+            <span>Note</span>
             <p>{{ form.notes || 'Fără instrucțiuni speciale momentan.' }}</p>
           </div>
 
           <v-divider class="my-4" />
 
-          <div class="summary-row total-row">
-            <span>Preț estimativ</span>
-            <strong>{{ estimatedPrice }} RON</strong>
+          <div class="summary-row">
+            <span>Preț pachet</span>
+            <strong>{{ basePrice }} RON</strong>
           </div>
 
-          <v-btn
-            class="gold-btn mt-6"
-            block
-            size="large"
-            @click="addCustomJarToCart"
-          >
-            Adaugă în coș
-          </v-btn>
+          <div class="summary-row" v-if="form.premiumOnly">
+            <span>Premium addon</span>
+            <strong>+500 RON</strong>
+          </div>
+
+          <div class="summary-row total-row">
+            <span>Total</span>
+            <strong>{{ finalPrice }} RON</strong>
+          </div>
         </v-card>
       </div>
+
+      <v-snackbar v-model="snackbar" timeout="2000">
+        Adăugat în coș 
+      </v-snackbar>
     </div>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { reactive, ref, computed } from 'vue'
 
-const router = useRouter()
+const formRef = ref()
+const error = ref('')
+const snackbar = ref(false)
+
+const PREMIUM_ADDON_PRICE = 500
 
 const materials = ['Argint', 'Aur', 'Mixed metals']
-const priceRanges = ['50 - 100 RON', '100 - 200 RON', '200 - 350 RON', '350+ RON']
-const sizes = ['Universal / mix', 'Mic', 'Mediu', 'Mare', 'Inele ajustabile only']
+const sizes = ['Mic (47-50)', 'Mediu (50-54)', 'Mare (54+)', 'Mix']
+
+const packages = [
+  { label: '6-8 piese • 99 RON', value: 99, pieces: '6-8' },
+  { label: '10-12 piese • 149 RON', value: 149, pieces: '10-12' },
+  { label: '14-16 piese • 199 RON', value: 199, pieces: '14-16' },
+  { label: '18-20 piese • 249 RON', value: 249, pieces: '18-20' }
+]
 
 const form = reactive({
   style: '',
   material: '',
+  package: null as number | null,
   premiumOnly: false,
-  priceRange: '',
   size: '',
   notes: ''
 })
 
-const estimatedPrice = computed(() => {
-  if (form.premiumOnly) return 349
-  if (form.priceRange === '50 - 100 RON') return 89
-  if (form.priceRange === '100 - 200 RON') return 149
-  if (form.priceRange === '200 - 350 RON') return 249
-  if (form.priceRange === '350+ RON') return 349
-  return 129
-})
+function requiredRule(field: string) {
+  return (v: unknown) => (!!v ? true : `${field} este obligatoriu`)
+}
 
-function addCustomJarToCart() {
-  const existingCart = JSON.parse(localStorage.getItem('glowJarCart') || '[]')
+function maxLengthRule(max: number) {
+  return (v: string) =>
+    !v || v.length <= max || `Maxim ${max} caractere`
+}
 
-  existingCart.push({
+const selectedPackage = computed(() =>
+  packages.find((p) => p.value === form.package)
+)
+
+const selectedPackageLabel = computed(() =>
+  selectedPackage.value?.label || '—'
+)
+
+const basePrice = computed(() => form.package || 0)
+
+const premiumAddon = computed(() => (form.premiumOnly ? PREMIUM_ADDON_PRICE : 0))
+
+const finalPrice = computed(() => basePrice.value + premiumAddon.value)
+
+async function addCustomJarToCart() {
+  error.value = ''
+
+  const valid = await formRef.value?.validate()
+  if (!valid?.valid) {
+    error.value = 'Completează toate câmpurile obligatorii.'
+    return
+  }
+
+  const cart = JSON.parse(localStorage.getItem('glowJarCart') || '[]')
+
+  cart.push({
     id: Date.now(),
     type: 'custom-jar',
     name: 'Glow Jar personalizat',
-    price: estimatedPrice.value,
+    price: finalPrice.value,
     quantity: 1,
     customization: {
       style: form.style,
       material: form.material,
+      selectedPackage: selectedPackage.value?.label || '',
+      packagePrice: basePrice.value,
       premiumOnly: form.premiumOnly,
-      priceRange: form.priceRange,
+      premiumAddon: premiumAddon.value,
+      pieces: selectedPackage.value?.pieces || '',
       size: form.size,
       notes: form.notes
     }
   })
 
-  localStorage.setItem('glowJarCart', JSON.stringify(existingCart))
+  localStorage.setItem('glowJarCart', JSON.stringify(cart))
+  snackbar.value = true
 }
 </script>
 
@@ -245,6 +301,15 @@ function addCustomJarToCart() {
   text-transform: none;
   font-weight: 600;
   box-shadow: none;
+}
+
+.form-error {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(176, 58, 75, 0.08);
+  color: #a33b50;
+  border: 1px solid rgba(176, 58, 75, 0.14);
+  font-size: 14px;
 }
 
 @media (max-width: 960px) {

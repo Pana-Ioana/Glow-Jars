@@ -4,15 +4,15 @@
       <v-card class="auth-card" elevation="0">
         <div class="auth-grid">
           <div class="auth-left">
-            <p class="eyebrow">Bine ai revenit</p>
-            <h1 class="title">Intră în cont</h1>
+            <p class="eyebrow">Verificare email</p>
+            <h1 class="title">Confirmă contul tău</h1>
             <p class="subtitle">
-              Accesează comenzile, wishlist-ul și preferințele tale Glow Jar.
+              Introdu codul primit pe email pentru a activa contul și a continua experiența Glow Jar.
             </p>
           </div>
 
           <div class="auth-right">
-            <v-form ref="formRef" @submit.prevent="handleLogin">
+            <v-form ref="formRef" @submit.prevent="handleVerify">
               <v-text-field
                 v-model.trim="form.email"
                 label="Email"
@@ -24,15 +24,13 @@
               />
 
               <v-text-field
-                v-model="form.password"
-                :type="showPassword ? 'text' : 'password'"
-                label="Parolă"
+                v-model.trim="form.code"
+                label="Cod de verificare"
                 variant="outlined"
                 density="comfortable"
                 class="field"
-                :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                :rules="passwordRules"
-                @click:append-inner="showPassword = !showPassword"
+                :rules="codeRules"
+                maxlength="6"
               />
 
               <p v-if="submitError" class="submit-error">{{ submitError }}</p>
@@ -46,7 +44,7 @@
                   elevation="0"
                   :loading="isSubmitting"
                 >
-                  Login
+                  Verifică emailul
                 </v-btn>
 
                 <v-btn
@@ -54,15 +52,16 @@
                   class="secondary-btn"
                   rounded="pill"
                   elevation="0"
-                  @click="goToRegister"
+                  :loading="isResending"
+                  @click="handleResend"
                 >
-                  Creează cont
+                  Retrimite codul
                 </v-btn>
               </div>
 
               <div class="text-link-row">
-                <button type="button" class="text-link" @click="goToForgotPassword">
-                  Ai uitat parola?
+                <button type="button" class="text-link" @click="goToLogin">
+                  Înapoi la login
                 </button>
               </div>
             </v-form>
@@ -75,19 +74,20 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
+const route = useRoute()
 const router = useRouter()
 
 const formRef = ref(null)
 const isSubmitting = ref(false)
+const isResending = ref(false)
 const submitError = ref('')
 const submitSuccess = ref('')
-const showPassword = ref(false)
 
 const form = reactive({
-  email: '',
-  password: '',
+  email: route.query.email || '',
+  code: '',
 })
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -97,24 +97,26 @@ const emailRules = [
   v => emailPattern.test(v) || 'Introdu un email valid.',
 ]
 
-const passwordRules = [
-  v => !!v || 'Parola este obligatorie.',
+const codeRules = [
+  v => !!v || 'Codul este obligatoriu.',
+  v => /^\d{6}$/.test(v) || 'Codul trebuie să aibă 6 cifre.',
 ]
 
-const handleLogin = async () => {
+const handleVerify = async () => {
   submitError.value = ''
   submitSuccess.value = ''
 
   const result = await formRef.value?.validate()
+
   if (!result?.valid) {
-    submitError.value = 'Completează corect emailul și parola.'
+    submitError.value = 'Te rog să completezi corect datele.'
     return
   }
 
   isSubmitting.value = true
 
   try {
-    const response = await fetch('http://localhost:8080/api/auth/login', {
+    const response = await fetch('http://localhost:8080/api/auth/verify-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -123,15 +125,14 @@ const handleLogin = async () => {
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data?.message || 'Nu s-a putut face logarea.')
+      throw new Error(data?.message || 'Nu s-a putut verifica emailul.')
     }
 
-    localStorage.setItem('glowJarUser', JSON.stringify(data))
-    submitSuccess.value = 'Te loghez...'
+    submitSuccess.value = data?.message || 'Email verificat cu succes.'
 
     setTimeout(() => {
-      router.push('/')
-    }, 900)
+      router.push('/login')
+    }, 1000)
   } catch (error) {
     submitError.value = error?.message || 'A apărut o eroare.'
   } finally {
@@ -139,12 +140,41 @@ const handleLogin = async () => {
   }
 }
 
-const goToRegister = () => {
-  router.push('/register')
+const handleResend = async () => {
+  submitError.value = ''
+  submitSuccess.value = ''
+
+  const validEmail = emailPattern.test(form.email)
+  if (!validEmail) {
+    submitError.value = 'Introdu un email valid pentru retrimitere.'
+    return
+  }
+
+  isResending.value = true
+
+  try {
+    const response = await fetch('http://localhost:8080/api/auth/resend-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: form.email }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data?.message || 'Nu s-a putut retrimite codul.')
+    }
+
+    submitSuccess.value = data?.message || 'Am retrimis codul.'
+  } catch (error) {
+    submitError.value = error?.message || 'A apărut o eroare.'
+  } finally {
+    isResending.value = false
+  }
 }
 
-const goToForgotPassword = () => {
-  router.push('/forgot-password')
+const goToLogin = () => {
+  router.push('/login')
 }
 </script>
 

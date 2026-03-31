@@ -10,8 +10,7 @@ public class CheckoutRequest {
     private String address;
     private String city;
     private String county;
-    private Double total;
-    private List<CheckoutItemDto> items;
+    private List<CheckoutItemRequest> items;
 
     public CheckoutRequest() {
     }
@@ -72,19 +71,11 @@ public class CheckoutRequest {
         this.county = county;
     }
 
-    public Double getTotal() {
-        return total;
-    }
-
-    public void setTotal(Double total) {
-        this.total = total;
-    }
-
-    public List<CheckoutItemDto> getItems() {
+    public List<CheckoutItemRequest> getItems() {
         return items;
     }
 
-    public void setItems(List<CheckoutItemDto> items) {
+    public void setItems(List<CheckoutItemRequest> items) {
         this.items = items;
     }
 }

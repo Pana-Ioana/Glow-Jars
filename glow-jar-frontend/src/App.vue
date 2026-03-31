@@ -120,6 +120,14 @@
 
               <v-card class="user-menu-card pa-2" elevation="0">
                 <v-btn
+  block
+  variant="text"
+  class="user-menu-btn"
+  @click="goToOrders"
+>
+  Istoric comenzi
+</v-btn>
+                <v-btn
                   block
                   variant="text"
                   class="user-menu-btn"
@@ -459,6 +467,11 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('storage', handleStorageChange)
 })
+
+function goToOrders() {
+  userMenu.value = false
+  router.push('/orders')
+}
 </script>
 
 <style scoped>

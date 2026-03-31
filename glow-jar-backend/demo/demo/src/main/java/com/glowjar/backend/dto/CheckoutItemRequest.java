@@ -1,19 +1,27 @@
 package com.glowjar.backend.dto;
 
-public class CheckoutItemDto {
-    private String productName;
+public class CheckoutItemRequest {
+    private Long productId;
+    private Long optionId;
     private Integer quantity;
-    private Double price;
 
-    public CheckoutItemDto() {
+    public CheckoutItemRequest() {
     }
 
-    public String getProductName() {
-        return productName;
+    public Long getProductId() {
+        return productId;
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+
+    public Long getOptionId() {
+        return optionId;
+    }
+
+    public void setOptionId(Long optionId) {
+        this.optionId = optionId;
     }
 
     public Integer getQuantity() {
@@ -22,13 +30,5 @@ public class CheckoutItemDto {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
-    }
-
-    public Double getPrice() {
-        return price;
-    }
-
-    public void setPrice(Double price) {
-        this.price = price;
     }
 }

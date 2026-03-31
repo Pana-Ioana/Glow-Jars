@@ -4,35 +4,23 @@
       <v-card class="auth-card" elevation="0">
         <div class="auth-grid">
           <div class="auth-left">
-            <p class="eyebrow">Bine ai revenit</p>
-            <h1 class="title">Intră în cont</h1>
+            <p class="eyebrow">Resetare parolă</p>
+            <h1 class="title">Ai uitat parola?</h1>
             <p class="subtitle">
-              Accesează comenzile, wishlist-ul și preferințele tale Glow Jar.
+              Introdu emailul asociat contului tău, iar noi îți trimitem un cod pentru resetare.
             </p>
           </div>
 
           <div class="auth-right">
-            <v-form ref="formRef" @submit.prevent="handleLogin">
+            <v-form ref="formRef" @submit.prevent="handleForgotPassword">
               <v-text-field
-                v-model.trim="form.email"
+                v-model.trim="email"
                 label="Email"
                 type="email"
                 variant="outlined"
                 density="comfortable"
                 class="field"
                 :rules="emailRules"
-              />
-
-              <v-text-field
-                v-model="form.password"
-                :type="showPassword ? 'text' : 'password'"
-                label="Parolă"
-                variant="outlined"
-                density="comfortable"
-                class="field"
-                :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                :rules="passwordRules"
-                @click:append-inner="showPassword = !showPassword"
               />
 
               <p v-if="submitError" class="submit-error">{{ submitError }}</p>
@@ -46,7 +34,7 @@
                   elevation="0"
                   :loading="isSubmitting"
                 >
-                  Login
+                  Trimite codul
                 </v-btn>
 
                 <v-btn
@@ -54,16 +42,10 @@
                   class="secondary-btn"
                   rounded="pill"
                   elevation="0"
-                  @click="goToRegister"
+                  @click="goToLogin"
                 >
-                  Creează cont
+                  Înapoi la login
                 </v-btn>
-              </div>
-
-              <div class="text-link-row">
-                <button type="button" class="text-link" @click="goToForgotPassword">
-                  Ai uitat parola?
-                </button>
               </div>
             </v-form>
           </div>
@@ -74,21 +56,16 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
 const formRef = ref(null)
+const email = ref('')
 const isSubmitting = ref(false)
 const submitError = ref('')
 const submitSuccess = ref('')
-const showPassword = ref(false)
-
-const form = reactive({
-  email: '',
-  password: '',
-})
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -97,40 +74,38 @@ const emailRules = [
   v => emailPattern.test(v) || 'Introdu un email valid.',
 ]
 
-const passwordRules = [
-  v => !!v || 'Parola este obligatorie.',
-]
-
-const handleLogin = async () => {
+const handleForgotPassword = async () => {
   submitError.value = ''
   submitSuccess.value = ''
 
   const result = await formRef.value?.validate()
   if (!result?.valid) {
-    submitError.value = 'Completează corect emailul și parola.'
+    submitError.value = 'Te rog să introduci un email valid.'
     return
   }
 
   isSubmitting.value = true
 
   try {
-    const response = await fetch('http://localhost:8080/api/auth/login', {
+    const response = await fetch('http://localhost:8080/api/auth/forgot-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ email: email.value }),
     })
 
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data?.message || 'Nu s-a putut face logarea.')
+      throw new Error(data?.message || 'Nu s-a putut trimite codul.')
     }
 
-    localStorage.setItem('glowJarUser', JSON.stringify(data))
-    submitSuccess.value = 'Te loghez...'
+    submitSuccess.value = data?.message || 'Dacă există un cont, am trimis un cod.'
 
     setTimeout(() => {
-      router.push('/')
+      router.push({
+        path: '/reset-password',
+        query: { email: email.value },
+      })
     }, 900)
   } catch (error) {
     submitError.value = error?.message || 'A apărut o eroare.'
@@ -139,12 +114,8 @@ const handleLogin = async () => {
   }
 }
 
-const goToRegister = () => {
-  router.push('/register')
-}
-
-const goToForgotPassword = () => {
-  router.push('/forgot-password')
+const goToLogin = () => {
+  router.push('/login')
 }
 </script>
 
@@ -250,19 +221,6 @@ const goToForgotPassword = () => {
   font-weight: 500;
   min-height: 46px;
   padding-inline: 22px;
-}
-
-.text-link-row {
-  margin-top: 16px;
-}
-
-.text-link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: #6a6268;
-  cursor: pointer;
-  text-decoration: underline;
 }
 
 @media (max-width: 960px) {

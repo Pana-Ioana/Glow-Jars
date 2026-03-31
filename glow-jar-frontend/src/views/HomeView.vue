@@ -20,7 +20,7 @@
               </div>
 
               <div class="d-flex flex-wrap ga-3">
-                <v-btn color="accent" rounded="xl" size="large" class="btn-soft">
+                <v-btn color="accent" rounded="xl" size="large" class="btn-soft"  @click="router.push('/customize-jar')">
                   Creează jar
                 </v-btn>
 
