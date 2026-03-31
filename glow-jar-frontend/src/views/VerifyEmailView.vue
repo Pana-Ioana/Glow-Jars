@@ -116,7 +116,7 @@ const handleVerify = async () => {
   isSubmitting.value = true
 
   try {
-    const response = await fetch('http://localhost:8080/api/auth/verify-email', {
+    const response = await fetch('https://glow-jars-production.up.railway.app/api/auth/verify-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -153,7 +153,7 @@ const handleResend = async () => {
   isResending.value = true
 
   try {
-    const response = await fetch('http://localhost:8080/api/auth/resend-code', {
+    const response = await fetch('https://glow-jars-production.up.railway.app/api/auth/resend-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: form.email }),

@@ -295,7 +295,7 @@ const checkoutFormRef = ref()
 const formError = ref('')
 const isSubmitting = ref(false)
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://glow-jars-production.up.railway.app'
 
 const paymentOptions = [
   'Card online',

@@ -114,7 +114,7 @@ async function setupStripe() {
   }
 
   try {
-    const response = await fetch('http://localhost:8080/api/payments/create-payment-intent', {
+    const response = await fetch('https://glow-jars-production.up.railway.app/api/payments/create-payment-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
