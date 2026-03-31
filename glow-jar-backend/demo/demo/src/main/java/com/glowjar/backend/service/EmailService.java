@@ -2,10 +2,14 @@ package com.glowjar.backend.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.core.io.InputStreamSource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 @Service
 public class EmailService {
@@ -16,28 +20,110 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    public void sendVerificationEmail(String to, String code) {
+    public void sendVerificationCode(String to,
+                                     String firstName,
+                                     String verificationCode,
+                                     String subject,
+                                     String appName) {
+        String safeFirstName = firstName != null ? firstName : "";
+        String safeCode = verificationCode != null ? verificationCode : "";
+        String safeSubject = subject != null && !subject.isBlank()
+                ? subject
+                : "Cod verificare cont";
+        String safeAppName = appName != null && !appName.isBlank()
+                ? appName
+                : "Glow Jar";
+
+        String text = """
+                Bună %s,
+
+                Codul tău de verificare este: %s
+
+                Introdu acest cod în aplicație pentru a continua.
+
+                %s
+                """.formatted(safeFirstName, safeCode, safeAppName);
+
+        sendSimpleEmail(to, safeSubject, text);
+    }
+
+    public void sendOrderConfirmation(String to,
+                                      String firstName,
+                                      String orderNumber,
+                                      Double totalAmount) {
+        String safeFirstName = firstName != null ? firstName : "";
+        String safeOrderNumber = orderNumber != null ? orderNumber : "-";
+        String safeAmount = totalAmount != null ? String.format("%.2f", totalAmount) : "0.00";
+
+        String subject = "Confirmare comandă Glow Jar";
+        String text = """
+                Bună %s,
+
+                Comanda ta a fost înregistrată cu succes.
+
+                Număr comandă: %s
+                Total: %s RON
+
+                Îți mulțumim că ai ales Glow Jar.
+                """.formatted(safeFirstName, safeOrderNumber, safeAmount);
+
+        sendSimpleEmail(to, subject, text);
+    }
+
+    public void sendInvoiceEmail(String to,
+                                 String firstName,
+                                 String orderNumber,
+                                 ByteArrayInputStream pdfStream) {
+        String safeFirstName = firstName != null ? firstName : "";
+        String safeOrderNumber = orderNumber != null ? orderNumber : "-";
+
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(to);
-            helper.setSubject("Cod verificare cont Glow Jar");
+            helper.setSubject("Factura Glow Jar - comanda " + safeOrderNumber);
             helper.setText("""
-                    Bună,
+                    Bună %s,
 
-                    Codul tău de verificare este: %s
-
-                    Introdu acest cod în pagină pentru a-ți activa contul.
+                    Atașat găsești factura pentru comanda ta %s.
 
                     Glow Jar
-                    """.formatted(code));
+                    """.formatted(safeFirstName, safeOrderNumber));
+
+            if (pdfStream != null) {
+                byte[] pdfBytes = pdfStream.readAllBytes();
+
+                helper.addAttachment("factura-" + safeOrderNumber + ".pdf", new InputStreamSource() {
+                    @Override
+                    public ByteArrayInputStream getInputStream() {
+                        return new ByteArrayInputStream(pdfBytes);
+                    }
+                });
+            }
 
             mailSender.send(message);
-            System.out.println("MAIL SENT TO: " + to);
+            System.out.println("INVOICE EMAIL SENT TO: " + to);
 
         } catch (MailException | MessagingException e) {
-            System.out.println("MAIL FAILED: " + e.getMessage());
+            System.out.println("INVOICE EMAIL FAILED: " + e.getMessage());
+        }
+    }
+
+    private void sendSimpleEmail(String to, String subject, String text) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(text);
+
+            mailSender.send(message);
+            System.out.println("EMAIL SENT TO: " + to);
+
+        } catch (MailException | MessagingException e) {
+            System.out.println("EMAIL FAILED: " + e.getMessage());
         }
     }
 }
