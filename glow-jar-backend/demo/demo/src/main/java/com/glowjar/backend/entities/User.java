@@ -24,7 +24,7 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private Boolean enabled;
+    private Boolean enabled = false;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
