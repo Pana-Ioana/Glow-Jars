@@ -538,7 +538,7 @@ async function fetchProducts() {
       params.append("search", route.query.search)
     }
 
-    const url = `http://localhost:8080/api/products${params.toString() ? `?${params.toString()}` : ""}`
+    const url = `http://glow-jars-production.up.railway.app/api/products${params.toString() ? `?${params.toString()}` : ""}`
     const res = await fetch(url)
 
     if (!res.ok) {
