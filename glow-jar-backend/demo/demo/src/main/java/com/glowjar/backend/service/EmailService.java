@@ -103,9 +103,9 @@ public class EmailService {
             }
 
             mailSender.send(message);
-            System.out.println("INVOICE EMAIL SENT TO: " + to);
+            System.out.println("EMAIL SENT TO: " + to);
 
-        } catch (MailException | MessagingException e) {
+        } catch (MailException | MessagingException | IOException e) {
             System.out.println("INVOICE EMAIL FAILED: " + e.getMessage());
         }
     }
