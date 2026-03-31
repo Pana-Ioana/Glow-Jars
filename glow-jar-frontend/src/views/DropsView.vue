@@ -49,7 +49,7 @@
                 rounded="xl"
                 size="large"
               >
-                Explorează drop
+                În curând
               </v-btn>
 
             </v-col>
@@ -63,7 +63,6 @@
           </v-row>
         </v-sheet>
 
-        <!-- PAST DROPS -->
         <div class="mb-6">
           <div class="brand-serif text-h5 section-heading">
             Drops anterioare
@@ -199,5 +198,7 @@ const pastDrops = [
   height:100%;
   object-fit:cover;
 }
+
+
 
 </style>

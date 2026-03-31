@@ -1,6 +1,6 @@
 <template>
   <v-main>
-    <v-container fluid class="products-shell py-10">
+    <v-container fluid class="products-shell py-10 px-0">
       <div class="products-header mb-6">
         <div>
           <div class="brand-serif text-h4 section-heading">
@@ -184,7 +184,7 @@
           </v-sheet>
         </div>
 
-        <div class="products">
+        <div class="products products-pane">
           <div v-if="loading" class="state-box">
             Se încarcă...
           </div>
@@ -272,10 +272,49 @@
 import { computed, onMounted, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 
+type ProductOption = {
+  size?: string
+  available?: boolean
+}
+
+type Product = {
+  id: number
+  slug: string
+  name: string
+  categorySlug: string
+  level: string
+  shortDescription?: string
+  imageUrl?: string
+  bestseller?: boolean
+  newIn?: boolean
+  materialTone?: string
+  vibe?: string
+  rating?: number
+  minPrice?: number
+  minPieces?: number
+  options?: ProductOption[]
+}
+
+type Filters = {
+  category: string
+  level: string
+  size: string
+  minPrice: number | null
+  maxPrice: number | null
+  minPieces: number | null
+  maxPieces: number | null
+  materialTone: string
+  vibe: string
+  bestseller: boolean
+  newIn: boolean
+  availableOnly: boolean
+  sort: string
+}
+
 const route = useRoute()
 const router = useRouter()
 
-const products = ref<any[]>([])
+const products = ref<Product[]>([])
 const loading = ref(false)
 const error = ref("")
 const brokenImages = ref<Record<number, boolean>>({})
@@ -352,14 +391,14 @@ const levelLabels: Record<string, string> = {
   luxe: "Luxe",
 }
 
-const filters = ref({
+const defaultFilters = (): Filters => ({
   category: "",
   level: "",
   size: "",
-  minPrice: null as number | null,
-  maxPrice: null as number | null,
-  minPieces: null as number | null,
-  maxPieces: null as number | null,
+  minPrice: null,
+  maxPrice: null,
+  minPieces: null,
+  maxPieces: null,
   materialTone: "",
   vibe: "",
   bestseller: false,
@@ -367,6 +406,8 @@ const filters = ref({
   availableOnly: false,
   sort: "newest",
 })
+
+const filters = ref<Filters>(defaultFilters())
 
 const pageTitle = computed(() => {
   if (filters.value.category) {
@@ -392,7 +433,7 @@ const pageSubtitle = computed(() => {
   return "Descoperă toate produsele Glow Jar disponibile acum."
 })
 
-const filteredProducts = computed(() => {
+const filteredProducts = computed<Product[]>(() => {
   let result = [...products.value]
 
   if (filters.value.category) {
@@ -412,39 +453,43 @@ const filteredProducts = computed(() => {
   }
 
   if (filters.value.bestseller) {
-    result = result.filter((p) => p.bestseller)
+    result = result.filter((p) => !!p.bestseller)
   }
 
   if (filters.value.newIn) {
-    result = result.filter((p) => p.newIn)
+    result = result.filter((p) => !!p.newIn)
   }
 
   if (filters.value.size) {
     result = result.filter((p) =>
-      p.options?.some((o: any) => o.size === filters.value.size)
+      p.options?.some((o) => o.size === filters.value.size)
     )
   }
 
   if (filters.value.availableOnly) {
     result = result.filter((p) =>
-      p.options?.some((o: any) => o.available)
+      p.options?.some((o) => !!o.available)
     )
   }
 
-  if (filters.value.minPrice !== null) {
-    result = result.filter((p) => (p.minPrice ?? 0) >= filters.value.minPrice)
+  const minPrice = filters.value.minPrice
+  if (minPrice !== null) {
+    result = result.filter((p) => (p.minPrice ?? 0) >= minPrice)
   }
 
-  if (filters.value.maxPrice !== null) {
-    result = result.filter((p) => (p.minPrice ?? 0) <= filters.value.maxPrice)
+  const maxPrice = filters.value.maxPrice
+  if (maxPrice !== null) {
+    result = result.filter((p) => (p.minPrice ?? 0) <= maxPrice)
   }
 
-  if (filters.value.minPieces !== null) {
-    result = result.filter((p) => (p.minPieces ?? 0) >= filters.value.minPieces)
+  const minPieces = filters.value.minPieces
+  if (minPieces !== null) {
+    result = result.filter((p) => (p.minPieces ?? 0) >= minPieces)
   }
 
-  if (filters.value.maxPieces !== null) {
-    result = result.filter((p) => (p.minPieces ?? 0) <= filters.value.maxPieces)
+  const maxPieces = filters.value.maxPieces
+  if (maxPieces !== null) {
+    result = result.filter((p) => (p.minPieces ?? 0) <= maxPieces)
   }
 
   switch (filters.value.sort) {
@@ -471,7 +516,7 @@ const totalPages = computed(() => {
   return Math.max(1, Math.ceil(filteredProducts.value.length / itemsPerPage.value))
 })
 
-const paginatedProducts = computed(() => {
+const paginatedProducts = computed<Product[]>(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return filteredProducts.value.slice(start, end)
@@ -506,9 +551,13 @@ async function fetchProducts() {
       throw new Error("Răspuns invalid de la server.")
     }
 
-    products.value = data
-  } catch (err: any) {
-    error.value = err?.message || "A apărut o eroare la încărcarea produselor."
+    products.value = data as Product[]
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = err.message
+    } else {
+      error.value = "A apărut o eroare la încărcarea produselor."
+    }
     products.value = []
   } finally {
     loading.value = false
@@ -520,22 +569,7 @@ function applyFilters() {
 }
 
 function resetFilters() {
-  filters.value = {
-    category: "",
-    level: "",
-    size: "",
-    minPrice: null,
-    maxPrice: null,
-    minPieces: null,
-    maxPieces: null,
-    materialTone: "",
-    vibe: "",
-    bestseller: false,
-    newIn: false,
-    availableOnly: false,
-    sort: "newest",
-  }
-
+  filters.value = defaultFilters()
   currentPage.value = 1
 }
 
@@ -582,10 +616,10 @@ watch(
 
 <style scoped>
 .products-shell {
-  max-width: 1800px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 .products-header {
@@ -628,11 +662,21 @@ watch(
 
 .layout {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 240px 1fr;
   gap: 24px;
+  align-items: start;
+}
+
+.filters {
+  width: 100%;
+}
+
+.products {
+  width: 100%;
 }
 
 .filters-card {
+  width: 100%;
   border-radius: 24px;
   border: 1px solid rgba(90, 59, 59, 0.08);
   background: rgba(255, 255, 255, 0.97);
@@ -666,11 +710,13 @@ watch(
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 
 .product-card {
+  display: flex;
+  flex-direction: column;
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid rgba(90, 59, 59, 0.08);
   border-radius: 24px;
@@ -687,7 +733,8 @@ watch(
 .product-image-wrap {
   position: relative;
   width: 100%;
-  height: 340px;
+  height: 300px;
+  overflow: hidden;
   background: linear-gradient(
     180deg,
     rgba(248, 232, 238, 0.7),
@@ -736,7 +783,12 @@ watch(
 }
 
 .product-content {
-  padding: 20px;
+  padding: 18px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
 }
 
 .product-meta {
@@ -744,25 +796,24 @@ watch(
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: rgba(90, 59, 59, 0.55);
-  margin-bottom: 8px;
 }
 
 .product-title {
   font-size: 24px;
   color: #5a3b3b;
-  margin-bottom: 10px;
   line-height: 1.2;
+  margin: 0;
 }
 
 .product-description {
   font-size: 14px;
   color: rgba(90, 59, 59, 0.82);
   line-height: 1.6;
-  min-height: 72px;
-  margin-bottom: 16px;
+  min-height: 68px;
 }
 
 .product-footer {
+  margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -808,7 +859,7 @@ watch(
 
 @media (max-width: 1400px) {
   .products-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -822,7 +873,7 @@ watch(
   }
 
   .products-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -839,8 +890,8 @@ watch(
 
 @media (max-width: 700px) {
   .products-shell {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
   .products-grid {

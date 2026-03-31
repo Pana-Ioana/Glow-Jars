@@ -1,441 +1,622 @@
 <template>
-  <div>
-    <v-main>
-      <v-container class="py-16">
-        <v-sheet
-          v-intersect="reveal"
-          class="reveal boutique-sheet pa-10 pa-md-16"
-          color="surface"
-          elevation="0"
-        >
-          <v-row align="center">
-            <v-col cols="12" md="7">
-              <div class="brand-serif text-h3 text-md-h2 mb-4">
-                Curated Mystery Jewelry
-              </div>
+  <v-main>
+    <v-container class="product-shell py-12">
+      <div v-if="loading" class="state-box">
+        Se încarcă produsul...
+      </div>
 
-              <div class="text-body-1 mb-6 hero-subtitle">
-                Surprize fine. Împachetate cu grijă. Alege o estetică, selectează un nivel și
-                lasă-ne să îți curăm surpriza.
-              </div>
+      <div v-else-if="error" class="state-box error-text">
+        {{ error }}
+      </div>
 
-              <div class="d-flex flex-wrap ga-3">
-                <v-btn color="accent" rounded="xl" size="large" class="btn-soft">
-                  Creează jar
-                </v-btn>
-
-                <v-btn
-                  variant="outlined"
-                  rounded="xl"
-                  size="large"
-                  class="btn-soft"
-                  @click="router.push('/products')"
-                >
-                  Vezi colecția
-                </v-btn>
-              </div>
-
-              <div class="d-flex flex-wrap ga-2 mt-6">
-                <v-chip variant="outlined" rounded="xl">Mystery controlat</v-chip>
-                <v-chip variant="outlined" rounded="xl">Valoare garantată</v-chip>
-                <v-chip variant="outlined" rounded="xl">Upgrade rar</v-chip>
-                <v-chip variant="outlined" rounded="xl">Drops limitate</v-chip>
-              </div>
-            </v-col>
-
-            <v-col cols="12" md="5">
-              <div class="hero-image-wrap">
-                <img :src="heroImg" class="hero-img" alt="Hero jar" />
-              </div>
-            </v-col>
-          </v-row>
-        </v-sheet>
-
-        <div
-          v-intersect="reveal"
-          class="reveal section-header mt-10 mb-6"
-        >
-          <div>
-            <div class="brand-serif text-h5 section-heading">
-              Estetici / categorii
+      <div v-else-if="product" class="product-layout">
+        <div class="product-media-card">
+          <div class="product-image-wrap">
+            <img
+              v-if="product.imageUrl && !imageBroken"
+              :src="product.imageUrl"
+              :alt="product.name"
+              class="product-image"
+              @error="imageBroken = true"
+            />
+            <div v-else class="product-placeholder">
+              Glow Jar
             </div>
-            <div class="text-body-2 section-subtitle">
-              Vezi toate stilurile sau intră pe o categorie.
+
+            <div class="product-badges">
+              <span v-if="product.bestseller" class="mini-badge">Bestseller</span>
+              <span v-if="product.newIn" class="mini-badge soft-badge">New in</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-info-card">
+          <div class="product-meta">
+            {{ prettyCategory(product.categorySlug) }} · {{ prettyLevel(product.level) }}
+          </div>
+
+          <h1 class="brand-serif product-title">
+            {{ product.name }}
+          </h1>
+
+          <p class="product-short">
+            {{ product.shortDescription }}
+          </p>
+
+          <p class="product-description">
+            {{ product.description }}
+          </p>
+
+          <div class="details-list" v-if="details.length">
+            <div v-for="detail in details" :key="detail" class="detail-item">
+              {{ detail }}
             </div>
           </div>
 
-          <v-btn
-            variant="outlined"
-            rounded="xl"
-            class="btn-soft"
-            @click="router.push('/products')"
-          >
-            Vezi toate
-          </v-btn>
-        </div>
-
-        <v-row v-intersect="reveal" class="reveal reveal-stagger">
-          <v-col v-for="c in categories" :key="c.id" cols="12" sm="6" md="4">
-            <v-sheet class="boutique-card pa-6 category-card" color="surface" elevation="0">
-              <div class="d-flex align-center justify-space-between ga-4">
-                <div>
-                  <div class="brand-serif text-h6 section-heading">
-                    {{ c.titlu }}
-                  </div>
-                  <div class="text-body-2 section-subtitle-strong">
-                    {{ c.descriere }}
-                  </div>
-                </div>
-
-                <v-btn icon variant="text" @click="router.push(c.path)">
-                  <v-icon icon="mdi-arrow-right" />
-                </v-btn>
-              </div>
-            </v-sheet>
-          </v-col>
-        </v-row>
-
-        <div
-          v-intersect="reveal"
-          class="reveal d-flex align-center justify-space-between mt-16 mb-6"
-        >
-          <div>
-            <div class="brand-serif text-h5 section-heading">
-              Cele mai populare
-            </div>
-            <div class="text-body-2 section-subtitle">
-              Un preview cu cele mai cumpărate jar-uri.
-            </div>
+          <div class="made-to-order-box">
+            Acest jar este realizat la comandă.
           </div>
 
-          <v-btn
-            variant="text"
-            class="btn-soft"
-            color="accent"
-            @click="router.push('/collection')"
-          >
-            Vezi colecția →
-          </v-btn>
-        </div>
+          <div class="selector-block">
+            <div class="selector-label">Alege mărimea</div>
 
-        <v-row v-intersect="reveal" class="reveal reveal-stagger">
-          <v-col v-for="jar in bestsellers" :key="jar.id" cols="12" md="4">
-            <v-card class="boutique-card mood-card" elevation="0">
-              <div class="mood-media">
-                <img v-if="jar.img" :src="jar.img" class="mood-img" :alt="jar.titlu" />
-                <div v-else class="mood-media-placeholder">Imagine jar</div>
-              </div>
-
-              <v-card-title class="brand-serif text-h6 section-heading">
-                {{ jar.titlu }}
-              </v-card-title>
-
-              <v-card-text class="text-body-2 section-subtitle-strong">
-                {{ jar.descriere }}
-              </v-card-text>
-
-              <v-card-actions class="px-4 pb-4">
-                <v-btn
-                  color="accent"
-                  variant="text"
-                  class="btn-soft"
-                  @click="router.push(`/products?category=${jar.categorySlug}`)"
-                >
-                  Descoperă
-                </v-btn>
-                <v-spacer />
-                <v-chip size="small" rounded="xl" variant="outlined">
-                  de la {{ jar.pretMin }}
-                </v-chip>
-              </v-card-actions>
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <div
-          id="how-it-works"
-          v-intersect="reveal"
-          class="reveal section-title mt-16"
-        >
-          <span class="section-line"></span>
-          <h2>Cum funcționează</h2>
-          <span class="section-line"></span>
-        </div>
-
-        <v-row v-intersect="reveal" class="reveal reveal-stagger mt-2">
-          <v-col cols="12" md="4">
-            <v-sheet class="boutique-card pa-6 how-card" color="surface" elevation="0">
-              <div class="d-flex align-center ga-3 mb-2">
-                <v-avatar size="34" color="secondary" rounded="lg">
-                  <span class="brand-serif">1</span>
-                </v-avatar>
-                <div class="brand-serif text-h6 section-heading">Alegi estetica</div>
-              </div>
-              <div class="text-body-2 section-subtitle-strong">
-                Selectezi un stil și un nivel.
-              </div>
-            </v-sheet>
-          </v-col>
-
-          <v-col cols="12" md="4">
-            <v-sheet class="boutique-card pa-6 how-card" color="surface" elevation="0">
-              <div class="d-flex align-center ga-3 mb-2">
-                <v-avatar size="34" color="primary" rounded="lg">
-                  <span class="brand-serif">2</span>
-                </v-avatar>
-                <div class="brand-serif text-h6 section-heading">Noi curăm</div>
-              </div>
-              <div class="text-body-2 section-subtitle-strong">
-                Surpriză controlată, cu vibe boutique.
-              </div>
-            </v-sheet>
-          </v-col>
-
-          <v-col cols="12" md="4">
-            <v-sheet class="boutique-card pa-6 how-card" color="surface" elevation="0">
-              <div class="d-flex align-center ga-3 mb-2">
-                <v-avatar size="34" color="secondary" rounded="lg">
-                  <span class="brand-serif">3</span>
-                </v-avatar>
-                <div class="brand-serif text-h6 section-heading">Tu desfaci</div>
-              </div>
-              <div class="text-body-2 section-subtitle-strong">
-                Primești jar-ul și poți prinde upgrade-uri rare.
-              </div>
-            </v-sheet>
-          </v-col>
-        </v-row>
-
-        <v-sheet
-          v-intersect="reveal"
-          class="reveal boutique-sheet pa-10 mt-16"
-          color="surface"
-          elevation="0"
-        >
-          <v-row align="center">
-            <v-col cols="12" md="8">
-              <div class="text-overline drop-label">
-                COLECȚIE LIMITATĂ
-              </div>
-              <div class="brand-serif text-h3 mt-2 section-heading">
-                Spring Awakening
-              </div>
-              <div class="text-body-2 mt-2 section-subtitle-strong">
-                Drop special disponibil pentru o perioadă limitată.
-              </div>
-            </v-col>
-
-            <v-col cols="12" md="4" class="d-flex justify-md-end mt-6 mt-md-0">
-              <v-btn
-                color="accent"
-                rounded="xl"
-                size="large"
-                class="btn-soft"
-                @click="router.push('/drops')"
+            <div class="size-options">
+              <button
+                v-for="option in product.options"
+                :key="option.id"
+                type="button"
+                class="size-chip"
+                :class="{ active: selectedOption?.id === option.id, disabled: !option.available }"
+                :disabled="!option.available"
+                @click="selectedOptionId = option.id"
               >
-                Vezi drop
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-sheet>
+                {{ prettySize(option.size) }}
+              </button>
+            </div>
+          </div>
 
-        <div v-intersect="reveal" class="reveal">
-          <AppFooter />
+          <div v-if="selectedOption" class="price-box">
+            <div class="price-main">
+              {{ selectedOption.price }} lei
+            </div>
+
+            <div class="price-sub"> Minim
+              {{ selectedOption.piecesCount }} piese incluse
+            </div>
+          </div>
+
+          <div class="qty-row">
+            <div class="selector-label">Cantitate</div>
+
+            <div class="qty-box">
+              <button type="button" class="qty-btn" @click="decreaseQty">−</button>
+              <span class="qty-value">{{ quantity }}</span>
+              <button type="button" class="qty-btn" @click="increaseQty">+</button>
+            </div>
+          </div>
+
+          <div class="actions-row">
+            <v-btn
+              class="gold-btn add-btn"
+              size="large"
+              :disabled="!selectedOption || !selectedOption.available"
+              @click="addToCart"
+            >
+              Adaugă în coș
+            </v-btn>
+          </div>
+
+          <div v-if="addedMessage" class="added-message">
+            {{ addedMessage }}
+          </div>
         </div>
-      </v-container>
-    </v-main>
-  </div>
+      </div>
+    </v-container>
+  </v-main>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue"
-import { useRouter } from "vue-router"
-import AppFooter from "../components/AppFooter.vue"
+import { computed, onMounted, ref } from "vue"
+import { useRoute } from "vue-router"
 
-const router = useRouter()
-
-const heroImg = new URL("../assets/jars/homejar.png", import.meta.url).href
-
-const categories = [
-  {
-    id: "all",
-    titlu: "Toate jar-urile",
-    descriere: "Vezi colecția completă.",
-    path: "/collection",
-  },
-  {
-    id: "romantic",
-    titlu: "Romantic & pastel",
-    descriere: "Stiluri delicate și feminine.",
-    path: "/collection?category=romantic",
-  },
-  {
-    id: "bold",
-    titlu: "Statement & glam",
-    descriere: "Strălucire și energie.",
-    path: "/collection?category=bold",
-  },
-]
-
-const bestsellers = [
-  {
-    id: "soft",
-    titlu: "Soft Girl",
-    categorySlug: "soft-girl",
-    img: new URL("../assets/jars/homesoft.png", import.meta.url).href,
-    descriere: "Univers delicat cu tonuri pastel.",
-    pretMin: 90,
-  },
-  {
-    id: "golden",
-    titlu: "Golden Muse",
-    categorySlug: "golden-muse",
-    img: new URL("../assets/jars/homegolden.png", import.meta.url).href,
-    descriere: "Eleganță aurie sofisticată.",
-    pretMin: 120,
-  },
-  {
-    id: "dark",
-    titlu: "Dark Romance",
-    categorySlug: "dark-romance",
-    img: new URL("../assets/jars/homedark.png", import.meta.url).href,
-    descriere: "Vibe misterios și dramatic.",
-    pretMin: 110,
-  },
-]
-
-const reveal = (isIntersecting: boolean, entries: IntersectionObserverEntry[]) => {
-  const el = entries[0]?.target as HTMLElement | undefined
-  if (!el) return
-  if (isIntersecting) el.classList.add("is-visible")
+type ProductOption = {
+  id: number
+  size: string
+  piecesCount: number
+  price: number
+  available: boolean
 }
 
-const setupStagger = () => {
-  const blocks = document.querySelectorAll(".reveal-stagger")
-  blocks.forEach((block) => {
-    const cards = block.querySelectorAll(".boutique-card, .v-card")
-    cards.forEach((card, i) => {
-      ;(card as HTMLElement).style.transitionDelay = `${Math.min(i * 90, 360)}ms`
-    })
-  })
+type Product = {
+  id: number
+  name: string
+  slug: string
+  categorySlug: string
+  level: string
+  shortDescription: string
+  description: string
+  detailOne?: string
+  detailTwo?: string
+  detailThree?: string
+  imageUrl?: string
+  bestseller?: boolean
+  newIn?: boolean
+  featured?: boolean
+  rating?: number
+  reviewsCount?: number
+  materialTone?: string
+  vibe?: string
+  options: ProductOption[]
 }
 
-onMounted(() => {
-  setupStagger()
+type CartItem = {
+  id: string
+  productId: number
+  slug: string
+  name: string
+  imageUrl?: string
+  quantity: number
+  price: number
+  selectedSize: string
+  piecesCount: number
+}
+
+const route = useRoute()
+
+const loading = ref(false)
+const error = ref("")
+const product = ref<Product | null>(null)
+const imageBroken = ref(false)
+const selectedOptionId = ref<number | null>(null)
+const quantity = ref(1)
+const addedMessage = ref("")
+
+const categoryLabels: Record<string, string> = {
+  "soft-girl": "Soft Girl",
+  "golden-muse": "Golden Muse",
+  "minimal-glow": "Minimal Glow",
+  "dark-romance": "Dark Romance",
+  "rose-quartz": "Rose Quartz",
+  "celestial-glow": "Celestial Glow",
+  "vintage-muse": "Vintage Muse",
+  "cottage-bloom": "Cottage Bloom",
+  "edgy-chic": "Edgy Chic",
+  "boho-dream": "Boho Dream",
+  "glam-goddess": "Glam Goddess",
+}
+
+const levelLabels: Record<string, string> = {
+  essential: "Essential",
+  signature: "Signature",
+  luxe: "Luxe",
+  atelier: "Atelier",
+  collector: "Collector",
+  edit: "Edit",
+  deluxe: "Deluxe",
+  premium: "Premium",
+  dream: "Dream",
+}
+
+const selectedOption = computed(() => {
+  if (!product.value || selectedOptionId.value === null) return null
+  return product.value.options.find((option) => option.id === selectedOptionId.value) || null
 })
+
+const details = computed(() => {
+  if (!product.value) return []
+  return [product.value.detailOne, product.value.detailTwo, product.value.detailThree].filter(
+    Boolean
+  ) as string[]
+})
+
+function prettyCategory(slug: string) {
+  return categoryLabels[slug] || slug
+}
+
+function prettyLevel(level: string) {
+  return levelLabels[level] || level
+}
+
+function prettySize(size: string) {
+  if (size === "small") return "Small"
+  if (size === "medium") return "Medium"
+  if (size === "large") return "Large"
+  return size
+}
+
+function increaseQty() {
+  quantity.value += 1
+}
+
+function decreaseQty() {
+  if (quantity.value > 1) quantity.value -= 1
+}
+
+async function fetchProduct() {
+  loading.value = true
+  error.value = ""
+
+  try {
+    const slug = route.params.slug
+    const res = await fetch(`http://localhost:8080/api/products/${slug}`)
+
+    if (!res.ok) {
+      throw new Error(`Nu s-a putut încărca produsul. (${res.status})`)
+    }
+
+    const data = await res.json()
+    product.value = data as Product
+
+    if (product.value.options && product.value.options.length > 0) {
+  const firstAvailable = product.value.options.find(o => o.available)
+
+  selectedOptionId.value = firstAvailable
+    ? firstAvailable.id
+    : product.value.options[0]?.id ?? null
+} else {
+  selectedOptionId.value = null
+}
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = err.message
+    } else {
+      error.value = "A apărut o eroare la încărcarea produsului."
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+function addToCart() {
+  if (!product.value || !selectedOption.value) return
+
+  const cartRaw = localStorage.getItem("glowJarCart")
+  const cart: CartItem[] = cartRaw ? JSON.parse(cartRaw) : []
+
+  const existingItem = cart.find(
+    (item) =>
+      item.productId === product.value!.id &&
+      item.selectedSize === selectedOption.value!.size
+  )
+
+  if (existingItem) {
+    existingItem.quantity += quantity.value
+  } else {
+    cart.push({
+      id: `${product.value.id}-${selectedOption.value.size}`,
+      productId: product.value.id,
+      slug: product.value.slug,
+      name: product.value.name,
+      imageUrl: product.value.imageUrl,
+      quantity: quantity.value,
+      price: selectedOption.value.price,
+      selectedSize: selectedOption.value.size,
+      piecesCount: selectedOption.value.piecesCount,
+    })
+  }
+
+  localStorage.setItem("glowJarCart", JSON.stringify(cart))
+  window.dispatchEvent(new Event("storage"))
+
+  addedMessage.value = "Produsul a fost adăugat în coș."
+  setTimeout(() => {
+    addedMessage.value = ""
+  }, 2500)
+}
+
+onMounted(fetchProduct)
 </script>
 
 <style scoped>
-#how-it-works {
-  scroll-margin-top: 100px;
+.product-shell {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
-.reveal {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(.2,.8,.2,1);
-  will-change: opacity, transform;
-}
-
-.reveal.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.reveal-stagger .boutique-card,
-.reveal-stagger .v-card {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(.2,.8,.2,1);
-}
-
-.reveal-stagger.is-visible .boutique-card,
-.reveal-stagger.is-visible .v-card {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.hero-image-wrap {
-  display: flex;
-  justify-content: center;
+.state-box {
+  padding: 56px 22px;
+  text-align: center;
   border-radius: 24px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(90, 59, 59, 0.08);
+  color: rgba(90, 59, 59, 0.78);
+}
+
+.error-text {
+  color: #9a4747;
+}
+
+.product-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.product-media-card,
+.product-info-card {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(90, 59, 59, 0.08);
+  border-radius: 28px;
   overflow: hidden;
 }
 
-.hero-img {
+.product-image-wrap {
+  position: relative;
   width: 100%;
-  height: 340px;
-  object-fit: cover;
-  display: block;
+  height: 640px;
+  background: linear-gradient(
+    180deg,
+    rgba(248, 232, 238, 0.7),
+    rgba(234, 220, 248, 0.45)
+  );
 }
 
-.hero-subtitle {
-  max-width: 58ch;
-  opacity: 0.85;
-}
-
-.mood-media {
-  height: 200px;
-  overflow: hidden;
-  border-top-left-radius: 22px;
-  border-top-right-radius: 22px;
-}
-
-.mood-img {
+.product-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.mood-media-placeholder {
+.product-placeholder {
+  width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
-  background: linear-gradient(180deg, rgba(248, 232, 238, 0.65), rgba(234, 220, 248, 0.35));
-  color: rgba(90, 59, 59, 0.6);
+  color: rgba(90, 59, 59, 0.58);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.product-badges {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mini-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(90, 59, 59, 0.08);
+  font-size: 12px;
+  font-weight: 700;
+  color: #5a3b3b;
+}
+
+.soft-badge {
+  background: rgba(248, 232, 238, 0.92);
+}
+
+.product-info-card {
+  padding: 32px;
+}
+
+.product-meta {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+  color: rgba(90, 59, 59, 0.55);
+  margin-bottom: 12px;
+}
+
+.product-title {
+  font-size: 42px;
+  line-height: 1.05;
+  color: #5a3b3b;
+  margin-bottom: 16px;
+}
+
+.product-short {
+  font-size: 18px;
+  color: rgba(90, 59, 59, 0.9);
+  line-height: 1.55;
+  margin-bottom: 14px;
+}
+
+.product-description {
+  font-size: 15px;
+  color: rgba(90, 59, 59, 0.78);
+  line-height: 1.7;
+  margin-bottom: 22px;
+}
+
+.details-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.detail-item {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(248, 232, 238, 0.42);
+  color: #5a3b3b;
+  font-size: 14px;
+}
+
+.made-to-order-box {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(213, 174, 88, 0.12);
+  color: #5a3b3b;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.selector-block {
+  margin-bottom: 22px;
+}
+
+.selector-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #5a3b3b;
+  margin-bottom: 12px;
+}
+
+.size-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.size-chip {
+  min-width: 108px;
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(90, 59, 59, 0.12);
+  background: white;
+  color: #5a3b3b;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.size-chip:hover {
+  border-color: rgba(213, 174, 88, 0.5);
+}
+
+.size-chip.active {
+  background: #d5ae58;
+  color: white;
+  border-color: #d5ae58;
+}
+
+.size-chip.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.price-box {
+  padding: 18px 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(90, 59, 59, 0.08);
+  margin-bottom: 22px;
+}
+
+.price-main {
+  font-size: 32px;
+  font-weight: 800;
+  color: #5a3b3b;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.price-sub {
+  color: rgba(90, 59, 59, 0.72);
+  font-size: 14px;
+}
+
+.qty-row {
+  margin-bottom: 24px;
+}
+
+.qty-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(90, 59, 59, 0.12);
+  background: white;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #5a3b3b;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.qty-value {
+  min-width: 18px;
+  text-align: center;
+  font-weight: 700;
+  color: #5a3b3b;
+}
+
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-btn {
+  min-width: 220px;
+}
+
+.added-message {
+  margin-top: 16px;
+  color: #4f7a4f;
   font-weight: 700;
 }
 
-.mood-card {
-  display: flex;
-  flex-direction: column;
-  min-height: 420px;
+.gold-btn {
+  background: #d5ae58 !important;
+  color: white !important;
+  border-radius: 999px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
 }
 
-.mood-card .v-card-text {
-  flex-grow: 1;
+.gold-btn:hover {
+  background: #c79f49 !important;
 }
 
-.section-heading {
-  color: rgba(90, 59, 59, 0.95);
+@media (max-width: 1100px) {
+  .product-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .product-image-wrap {
+    height: 520px;
+  }
 }
 
-.section-subtitle {
-  opacity: 0.75;
-}
+@media (max-width: 700px) {
+  .product-shell {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 
-.section-subtitle-strong {
-  opacity: 0.85;
-}
+  .product-info-card {
+    padding: 22px;
+  }
 
-.how-card {
-  min-height: 136px;
-}
+  .product-title {
+    font-size: 32px;
+  }
 
-.drop-label {
-  letter-spacing: 2px;
-  opacity: 0.7;
-}
+  .product-image-wrap {
+    height: 380px;
+  }
 
-.category-card {
-  min-height: 132px;
-}
+  .size-chip {
+    min-width: 94px;
+  }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  .add-btn {
+    width: 100%;
+  }
+
+  .actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>
