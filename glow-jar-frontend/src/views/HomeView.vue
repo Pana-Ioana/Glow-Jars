@@ -29,7 +29,7 @@
                   rounded="xl"
                   size="large"
                   class="btn-soft"
-                  @click="router.push('/collection')"
+                  @click="router.push('/products')"
                 >
                   Vezi colecția
                 </v-btn>
@@ -68,7 +68,7 @@
             variant="outlined"
             rounded="xl"
             class="btn-soft"
-            @click="router.push('/collection')"
+            @click="router.push('/products')"
           >
             Vezi toate
           </v-btn>
@@ -135,7 +135,14 @@
               </v-card-text>
 
               <v-card-actions class="px-4 pb-4">
-                <v-btn color="accent" variant="text" class="btn-soft">Descoperă</v-btn>
+                <v-btn
+                  color="accent"
+                  variant="text"
+                  class="btn-soft"
+                  @click="router.push(`/products?category=${jar.categorySlug}`)"
+                >
+                  Descoperă
+                </v-btn>
                 <v-spacer />
                 <v-chip size="small" rounded="xl" variant="outlined">
                   de la {{ jar.pretMin }}
@@ -274,6 +281,7 @@ const bestsellers = [
   {
     id: "soft",
     titlu: "Soft Girl",
+    categorySlug: "soft-girl",
     img: new URL("../assets/jars/homesoft.png", import.meta.url).href,
     descriere: "Univers delicat cu tonuri pastel.",
     pretMin: 90,
@@ -281,6 +289,7 @@ const bestsellers = [
   {
     id: "golden",
     titlu: "Golden Muse",
+    categorySlug: "golden-muse",
     img: new URL("../assets/jars/homegolden.png", import.meta.url).href,
     descriere: "Eleganță aurie sofisticată.",
     pretMin: 120,
@@ -288,6 +297,7 @@ const bestsellers = [
   {
     id: "dark",
     titlu: "Dark Romance",
+    categorySlug: "dark-romance",
     img: new URL("../assets/jars/homedark.png", import.meta.url).href,
     descriere: "Vibe misterios și dramatic.",
     pretMin: 110,

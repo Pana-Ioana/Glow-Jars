@@ -49,7 +49,12 @@
               </v-card-text>
 
               <v-card-actions class="px-4 pb-4">
-                <v-btn color="accent" variant="text" class="btn-soft">
+                <v-btn
+                  color="accent"
+                  variant="text"
+                  class="btn-soft"
+                  @click="router.push(`/products?category=${jar.productCategorySlug}`)"
+                >
                   Descoperă
                 </v-btn>
                 <v-spacer />
@@ -67,7 +72,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue"
-import { useRoute } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 
 type CategoryKey =
   | "all"
@@ -82,6 +87,7 @@ type CategoryKey =
   | "vintage"
 
 const route = useRoute()
+const router = useRouter()
 const selectedCategory = ref<CategoryKey>("all")
 
 const filterOptions = [
@@ -102,6 +108,7 @@ const jars = [
     id: "soft",
     titlu: "Soft Girl",
     categorie: "romantic" as CategoryKey,
+    productCategorySlug: "soft-girl",
     img: new URL("../assets/jars/soft.png", import.meta.url).href,
     descriere:
       "Un univers delicat, cu accente romantice și tonuri pastel care completează un stil feminin și visător.",
@@ -111,6 +118,7 @@ const jars = [
     id: "golden",
     titlu: "Golden Muse",
     categorie: "elegant" as CategoryKey,
+    productCategorySlug: "golden-muse",
     img: new URL("../assets/jars/golden.png", import.meta.url).href,
     descriere:
       "O estetică inspirată de eleganța aurie, cu o energie caldă și sofisticată, potrivită pentru apariții memorabile.",
@@ -120,6 +128,7 @@ const jars = [
     id: "minimal",
     titlu: "Minimal Glow",
     categorie: "minimal" as CategoryKey,
+    productCategorySlug: "minimal-glow",
     img: new URL("../assets/jars/minim.png", import.meta.url).href,
     descriere:
       "Linii curate, echilibru și rafinament discret pentru un stil modern care nu are nevoie de exagerări.",
@@ -129,6 +138,7 @@ const jars = [
     id: "dark",
     titlu: "Dark Romance",
     categorie: "dark" as CategoryKey,
+    productCategorySlug: "dark-romance",
     img: new URL("../assets/jars/dark.png", import.meta.url).href,
     descriere:
       "Un vibe profund și misterios, cu accente dramatice și o eleganță care atrage fără să fie evidentă.",
@@ -138,6 +148,7 @@ const jars = [
     id: "rose",
     titlu: "Rose Quartz",
     categorie: "romantic" as CategoryKey,
+    productCategorySlug: "rose-quartz",
     img: new URL("../assets/jars/rq.png", import.meta.url).href,
     descriere:
       "O estetică luminoasă și romantică, inspirată de nuanțe fine de roz și o energie blândă, feminină.",
@@ -147,6 +158,7 @@ const jars = [
     id: "celestial",
     titlu: "Celestial Glow",
     categorie: "celestial" as CategoryKey,
+    productCategorySlug: "celestial-glow",
     img: new URL("../assets/jars/celestial.png", import.meta.url).href,
     descriere:
       "Inspirat de cerul nopții și de lumina subtilă a stelelor, pentru un stil visător și ușor misterios.",
@@ -156,6 +168,7 @@ const jars = [
     id: "vintage",
     titlu: "Vintage Muse",
     categorie: "vintage" as CategoryKey,
+    productCategorySlug: "vintage-muse",
     img: new URL("../assets/jars/vintage.png", import.meta.url).href,
     descriere:
       "Un mix între clasic și modern, cu influențe retro reinterpretate într-o manieră elegantă și actuală.",
@@ -165,6 +178,7 @@ const jars = [
     id: "cottage",
     titlu: "Cottage Bloom",
     categorie: "boho" as CategoryKey,
+    productCategorySlug: "cottage-bloom",
     img: new URL("../assets/jars/cottage.png", import.meta.url).href,
     descriere:
       "O atmosferă naturală și romantică, inspirată de flori, lumină caldă și simplitate autentică.",
@@ -174,6 +188,7 @@ const jars = [
     id: "edgy",
     titlu: "Edgy Chic",
     categorie: "bold" as CategoryKey,
+    productCategorySlug: "edgy-chic",
     img: new URL("../assets/jars/edgy.png", import.meta.url).href,
     descriere:
       "Un stil îndrăzneț și modern, cu accente metalice și o energie urbană care nu trece neobservată.",
@@ -183,6 +198,7 @@ const jars = [
     id: "boho",
     titlu: "Boho Dream",
     categorie: "boho" as CategoryKey,
+    productCategorySlug: "boho-dream",
     img: new URL("../assets/jars/boho.png", import.meta.url).href,
     descriere:
       "O estetică liberă și artistică, cu influențe boeme și o energie relaxată, perfectă pentru spiritul liber.",
@@ -192,6 +208,7 @@ const jars = [
     id: "glam",
     titlu: "Glam Goddess",
     categorie: "glam" as CategoryKey,
+    productCategorySlug: "glam-goddess",
     img: new URL("../assets/jars/glam.png", import.meta.url).href,
     descriere:
       "Strălucire și opulență pentru un stil care emană încredere și atracție, perfect pentru ocazii speciale.",

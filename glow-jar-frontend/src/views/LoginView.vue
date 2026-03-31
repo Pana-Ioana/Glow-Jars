@@ -103,7 +103,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const emailRules = [
   v => !!v || 'Emailul este obligatoriu.',
-  v => emailPattern.test(v) || 'Introdu un email valid.',
+  v => emailPattern.test(v) || 'Introdu un email valid.', 
 ]
 
 const passwordRules = [
