@@ -7,6 +7,7 @@ import com.glowjar.backend.entities.OrderItem;
 import com.glowjar.backend.interfaces.OrderRepo;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 
 @Service
@@ -14,18 +15,23 @@ public class OrderService {
 
     private final OrderRepo orderRepo;
     private final EmailService emailService;
+    private final InvoiceService invoiceService;
 
-    public OrderService(OrderRepo orderRepo, EmailService emailService) {
+    public OrderService(OrderRepo orderRepo,
+                        EmailService emailService,
+                        InvoiceService invoiceService) {
         this.orderRepo = orderRepo;
         this.emailService = emailService;
+        this.invoiceService = invoiceService;
     }
 
     public Order createOrder(CreateOrderRequest request) {
         Order order = new Order();
-        order.setEmail(request.getEmail());
-        order.setFullName(request.getFullName());
-        order.setPhone(request.getPhone());
-        order.setAddress(request.getAddress());
+
+        order.setEmail(request.getEmail() != null ? request.getEmail().trim().toLowerCase() : null);
+        order.setFullName(request.getFullName() != null ? request.getFullName().trim() : null);
+        order.setPhone(request.getPhone() != null ? request.getPhone().trim() : null);
+        order.setAddress(request.getAddress() != null ? request.getAddress().trim() : null);
         order.setTotal(request.getTotal());
         order.setStatus("PLASATA");
         order.setCreatedAt(LocalDateTime.now());
@@ -44,12 +50,12 @@ public class OrderService {
 
         Order savedOrder = orderRepo.save(order);
 
-        try {
-            String firstName = savedOrder.getFullName();
-            if (firstName != null && firstName.contains(" ")) {
-                firstName = firstName.split(" ")[0];
-            }
+        String firstName = savedOrder.getFullName();
+        if (firstName != null && firstName.contains(" ")) {
+            firstName = firstName.split(" ")[0];
+        }
 
+        try {
             emailService.sendOrderConfirmation(
                     savedOrder.getEmail(),
                     firstName,
@@ -58,6 +64,20 @@ public class OrderService {
             );
         } catch (Exception e) {
             System.out.println("ORDER CONFIRMATION EMAIL FAILED: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        try {
+            ByteArrayInputStream pdfStream = invoiceService.generateInvoicePdf(savedOrder);
+
+            emailService.sendInvoiceEmail(
+                    savedOrder.getEmail(),
+                    firstName,
+                    String.valueOf(savedOrder.getId()),
+                    pdfStream
+            );
+        } catch (Exception e) {
+            System.out.println("INVOICE EMAIL FAILED: " + e.getMessage());
             e.printStackTrace();
         }
 
