@@ -125,7 +125,7 @@ const errorMessage = ref('')
 const orders = ref<any[]>([])
 
 const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || 'https://glow-jars-production.up.railway.app:8080'
+  import.meta.env.VITE_API_BASE_URL || 'https://glow-jars-production.up.railway.app'
 
 function formatDate(value: string) {
   if (!value) return '-'
