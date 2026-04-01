@@ -10,7 +10,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 @Service
 public class EmailService {
@@ -99,18 +98,21 @@ public class EmailService {
             if (pdfStream != null) {
                 byte[] pdfBytes = pdfStream.readAllBytes();
 
-                helper.addAttachment("factura-" + safeOrderNumber + ".pdf", new InputStreamSource() {
-                    @Override
-                    public ByteArrayInputStream getInputStream() {
-                        return new ByteArrayInputStream(pdfBytes);
-                    }
-                });
+                helper.addAttachment(
+                        "factura-" + safeOrderNumber + ".pdf",
+                        new InputStreamSource() {
+                            @Override
+                            public ByteArrayInputStream getInputStream() {
+                                return new ByteArrayInputStream(pdfBytes);
+                            }
+                        }
+                );
             }
 
             mailSender.send(message);
             System.out.println("EMAIL SENT TO: " + to);
 
-        } catch (MailException | MessagingException) {
+        } catch (MailException | MessagingException e) {
             System.out.println("INVOICE EMAIL FAILED: " + e.getMessage());
             e.printStackTrace();
         }
