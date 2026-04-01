@@ -88,7 +88,7 @@ const paymentReady = ref(false)
 const order = ref<OrderPayload | null>(null)
 const paymentElementRef = ref<HTMLElement | null>(null)
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PK)
+const stripePromise = loadStripe('pk_test_51TH6Tq2MZa6l3iFuWpKPpQPplGigK7fE7DXcoPA9oAf1lFl4JyZcZdL06Ywan7WmKs5xWBNitUI2sUk1oybxKk4M00kKZm1Fi8')
 
 let stripeInstance: Stripe | null = null
 let elementsInstance: StripeElements | null = null
