@@ -13,9 +13,11 @@ import java.time.LocalDateTime;
 public class OrderService {
 
     private final OrderRepo orderRepo;
+    private final EmailService emailService;
 
-    public OrderService(OrderRepo orderRepo) {
+    public OrderService(OrderRepo orderRepo, EmailService emailService) {
         this.orderRepo = orderRepo;
+        this.emailService = emailService;
     }
 
     public Order createOrder(CreateOrderRequest request) {
@@ -40,6 +42,25 @@ public class OrderService {
             }
         }
 
-        return orderRepo.save(order);
+        Order savedOrder = orderRepo.save(order);
+
+        try {
+            String firstName = savedOrder.getFullName();
+            if (firstName != null && firstName.contains(" ")) {
+                firstName = firstName.split(" ")[0];
+            }
+
+            emailService.sendOrderConfirmation(
+                    savedOrder.getEmail(),
+                    firstName,
+                    String.valueOf(savedOrder.getId()),
+                    savedOrder.getTotal()
+            );
+        } catch (Exception e) {
+            System.out.println("ORDER CONFIRMATION EMAIL FAILED: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return savedOrder;
     }
 }
