@@ -2,6 +2,7 @@ package com.glowjar.backend.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -15,6 +16,9 @@ import java.io.IOException;
 public class EmailService {
 
     private final JavaMailSender mailSender;
+
+    @Value("${app.mail.from}")
+    private String fromEmail;
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
@@ -35,11 +39,11 @@ public class EmailService {
                 : "Glow Jar";
 
         String text = """
-                Bună %s,
+                Buna %s,
 
-                Codul tău de verificare este: %s
+                Codul tau de verificare este: %s
 
-                Introdu acest cod în aplicație pentru a continua.
+                Introdu acest cod in aplicatie pentru a continua.
 
                 %s
                 """.formatted(safeFirstName, safeCode, safeAppName);
@@ -55,16 +59,16 @@ public class EmailService {
         String safeOrderNumber = orderNumber != null ? orderNumber : "-";
         String safeAmount = totalAmount != null ? String.format("%.2f", totalAmount) : "0.00";
 
-        String subject = "Confirmare comandă Glow Jar";
+        String subject = "Confirmare comanda Glow Jar";
         String text = """
-                Bună %s,
+                Buna %s,
 
-                Comanda ta a fost înregistrată cu succes.
+                Comanda ta a fost inregistrata cu succes.
 
-                Număr comandă: %s
+                Numar comanda: %s
                 Total: %s RON
 
-                Îți mulțumim că ai ales Glow Jar.
+                Iti multumim ca ai ales Glow Jar.
                 """.formatted(safeFirstName, safeOrderNumber, safeAmount);
 
         sendSimpleEmail(to, subject, text);
@@ -81,12 +85,13 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            helper.setFrom(fromEmail);
             helper.setTo(to);
             helper.setSubject("Factura Glow Jar - comanda " + safeOrderNumber);
             helper.setText("""
-                    Bună %s,
+                    Buna %s,
 
-                    Atașat găsești factura pentru comanda ta %s.
+                    Atasat gasesti factura pentru comanda ta %s.
 
                     Glow Jar
                     """.formatted(safeFirstName, safeOrderNumber));
@@ -105,8 +110,9 @@ public class EmailService {
             mailSender.send(message);
             System.out.println("EMAIL SENT TO: " + to);
 
-        } catch (MailException | MessagingException e) {
+        } catch (MailException | MessagingException | IOException e) {
             System.out.println("INVOICE EMAIL FAILED: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -115,6 +121,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
 
+            helper.setFrom(fromEmail);
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(text);
@@ -124,6 +131,7 @@ public class EmailService {
 
         } catch (MailException | MessagingException e) {
             System.out.println("EMAIL FAILED: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
