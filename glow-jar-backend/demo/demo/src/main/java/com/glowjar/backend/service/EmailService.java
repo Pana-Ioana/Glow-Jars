@@ -110,7 +110,7 @@ public class EmailService {
             mailSender.send(message);
             System.out.println("EMAIL SENT TO: " + to);
 
-        } catch (MailException | MessagingException | IOException e) {
+        } catch (MailException | MessagingException) {
             System.out.println("INVOICE EMAIL FAILED: " + e.getMessage());
             e.printStackTrace();
         }
